@@ -1,0 +1,231 @@
+{
+    "knowledge": [
+      {
+        "triggers": [
+          "¿Cuál es tu horario de carga?",
+          "¿A qué hora cargas?",
+          "¿En qué horario te cargas?",
+          "¿Cuándo te pones a cargar?",
+          "¿A qué hora vas a la base de carga?"
+        ],
+        "answer": "De 09:00 a 17:00 h de lunes a viernes."
+      },
+      {
+        "triggers": [
+          "¿Qué hago si te detienes?",
+          "¿Qué pasa si te paras?",
+          "Te detuviste, ¿qué debo hacer?",
+          "El robot se detuvo, ¿cómo lo reinicio?"
+        ],
+        "answer": "Pulsa E-STOP, revisa batería y reinicia Nav2. Si persiste, verifica /amcl_pose."
+      },
+      {
+        "triggers": [
+          "¿Dónde está tu base de carga?",
+          "¿Dónde queda la estación de carga?",
+          "Muéstrame dónde cargas",
+          "Indícame dónde está tu base"
+        ],
+        "answer": "La base de carga está en mi casa"
+      },
+      {
+        "triggers": [
+          "Dame tus coordenadas actuales",
+          "¿Cuál es tu ubicación ahora?",
+          "¿Dónde estás?",
+          "Quiero saber tu posición y orientación"
+        ],
+        "answer": "Pregunta: 'Dame mis coordenadas y orientación actuales'."
+      },
+      {
+        "triggers": [
+          "¿Cómo te reinicio?",
+          "Reiníciate",
+          "Quiero reiniciar el robot",
+          "Haz un reinicio"
+        ],
+        "answer": "Pulsa E-STOP, espera 5 segundos, y pulsa de nuevo E-STOP."
+      },
+      {
+        "triggers": [
+          "No respondes, ¿qué hago?",
+          "¿Qué hacer si no respondes?",
+          "Te hablo y no contestas",
+          "No reaccionas a mis órdenes"
+        ],
+        "answer": "Revisa la conexión a la red y reinicia el sistema si es necesario."
+      },
+      {
+        "triggers": [
+          "¿Cómo actualizo tu software?",
+          "Necesito actualizarte",
+          "Quiero instalar tu última versión",
+          "Actualizar sistema del robot"
+        ],
+        "answer": "Sigue las instrucciones en la documentación del sistema."
+      },
+      {
+        "triggers": [
+          "Estás atascado, ¿qué hago?",
+          "¿Qué pasa si te quedas atascado?",
+          "No puedes moverte",
+          "Te atoraste"
+        ],
+        "answer": "Intenta moverlo manualmente o reinicia el sistema."
+      },
+      {
+        "triggers": [
+          "¿Cómo cambio tu configuración?",
+          "Quiero ajustar tu configuración",
+          "Modifica tus ajustes",
+          "Cambia la configuración del robot"
+        ],
+        "answer": "Accede al panel de control y ajusta las configuraciones necesarias."
+      },
+      {
+        "triggers": [
+          "¿Dónde está tu manual?",
+          "Enséñame tu manual de usuario",
+          "Quiero la documentación",
+          "¿Dónde está la guía del robot?"
+        ],
+        "answer": "Consulta la sección de documentación en el sitio web del fabricante."
+      },
+      {
+        "triggers": [
+          "¿Cómo contacto a soporte técnico?",
+          "Dame el contacto de soporte",
+          "Necesito hablar con soporte",
+          "¿Tienes número de asistencia?"
+        ],
+        "answer": "Envía un correo."
+      },
+      {
+        "triggers": [
+          "No cargas, ¿qué pasa?",
+          "¿Qué hacer si no te cargas?",
+          "No detectas la base de carga",
+          "No puedes cargar"
+        ],
+        "answer": "Verifica la conexión a la base de carga y asegúrate de que esté encendida."
+      },
+      {
+        "triggers": [
+          "¿Cómo calibro tus sensores?",
+          "Calibra tus sensores",
+          "Quiero calibrarte",
+          "Realiza calibración de sensores"
+        ],
+        "answer": "Sigue las instrucciones de calibración en el manual del usuario."
+      },
+      {
+        "triggers": [
+          "Estás mostrando un error",
+          "Me diste un código de error",
+          "Fallaste, ¿qué hago?",
+          "Marcaste un error"
+        ],
+        "answer": "Consulta el código de error en la documentación y sigue las recomendaciones."
+      },
+      {
+        "triggers": [
+          "¿Cuándo es tu mantenimiento?",
+          "Quiero hacerte mantenimiento",
+          "¿Cómo hago un mantenimiento preventivo?",
+          "Revisión del robot"
+        ],
+        "answer": "Revisa los componentes mecánicos y electrónicos según el plan de mantenimiento."
+      },
+      {
+        "triggers": [
+          "¿Dónde están tus registros?",
+          "Muéstrame tus logs",
+          "Quiero ver el historial de errores",
+          "¿Dónde guardas los registros?"
+        ],
+        "answer": "En la carpeta /var/log/robot_logs del sistema."
+      },
+      {
+        "triggers": [
+          "¿Cómo reinicio tu sistema operativo?",
+          "Reinicia el sistema",
+          "Haz reboot",
+          "Quiero reiniciar el SO"
+        ],
+        "answer": "Usa el comando 'sudo reboot' en la terminal."
+      },
+      {
+        "triggers": [
+          "Has perdido conexión con la red",
+          "No estás conectado",
+          "No tienes internet",
+          "Se cayó la conexión"
+        ],
+        "answer": "Reinicia el router o verifica la configuración de red del robot."
+      },
+      {
+        "triggers": [
+          "¿Cómo actualizo tu base de datos?",
+          "Actualizar base de datos",
+          "Quiero cargar nuevos datos",
+          "Update de base de datos"
+        ],
+        "answer": "Sigue las instrucciones en la sección de actualizaciones del manual."
+      },
+      {
+        "triggers": [
+          "Configúrate para una nueva tarea",
+          "Asignar tarea nueva",
+          "Quiero que hagas otra tarea",
+          "Cambia de tarea"
+        ],
+        "answer": "Accede al panel de control y selecciona la tarea deseada."
+      },
+      {
+        "triggers": [
+          "No puedes navegar",
+          "Tienes problemas de navegación",
+          "¿Qué hacer si no navegas?",
+          "Error al navegar"
+        ],
+        "answer": "Verifica los mapas y la configuración de navegación en el sistema."
+      },
+      {
+        "triggers": [
+          "¿Cómo ajusto tu velocidad?",
+          "Quiero que vayas más rápido",
+          "Muévete más despacio",
+          "Configura tu velocidad"
+        ],
+        "answer": "Accede a la configuración de velocidad en el panel de control y ajusta según sea necesario."
+      },
+      {
+        "triggers": [
+          "¿Cómo hago un diagnóstico?",
+          "Ejecuta diagnóstico",
+          "Quiero un reporte de tu estado",
+          "Haz un chequeo"
+        ],
+        "answer": "Usa el comando 'diagnostic' en la terminal para obtener un informe completo."
+      },
+      {
+        "triggers": [
+          "¿Dónde encuentro actualizaciones de software?",
+          "Quiero tu última versión",
+          "Descargar actualización",
+          "Actualizar robot"
+        ],
+        "answer": "Visita el sitio web del fabricante y busca la sección de descargas."
+      },
+      {
+        "triggers": [
+          "¿Cómo reinicio tus sensores?",
+          "Reinicia sensores",
+          "Quiero resetear sensores",
+          "Haz reset de sensores"
+        ],
+        "answer": "Desconecta y vuelve a conectar los sensores o usa el comando 'reset_sensors' en la terminal."
+      }
+    ]
+  }
+  

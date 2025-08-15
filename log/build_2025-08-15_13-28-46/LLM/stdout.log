@@ -1,0 +1,26 @@
+running egg_info
+writing ../../build/LLM/LLM.egg-info/PKG-INFO
+writing dependency_links to ../../build/LLM/LLM.egg-info/dependency_links.txt
+writing entry points to ../../build/LLM/LLM.egg-info/entry_points.txt
+writing requirements to ../../build/LLM/LLM.egg-info/requires.txt
+writing top-level names to ../../build/LLM/LLM.egg-info/top_level.txt
+reading manifest file '../../build/LLM/LLM.egg-info/SOURCES.txt'
+writing manifest file '../../build/LLM/LLM.egg-info/SOURCES.txt'
+running build
+running build_py
+copying LLM/temp.py -> /home/snorlix/ROS2/Octopy/build/LLM/build/lib/LLM
+copying LLM/__init__.py -> /home/snorlix/ROS2/Octopy/build/LLM/build/lib/LLM
+copying LLM/agent_node.py -> /home/snorlix/ROS2/Octopy/build/LLM/build/lib/LLM
+running install
+running install_lib
+copying /home/snorlix/ROS2/Octopy/build/LLM/build/lib/LLM/agent_node.py -> /home/snorlix/ROS2/Octopy/install/LLM/lib/python3.10/site-packages/LLM
+byte-compiling /home/snorlix/ROS2/Octopy/install/LLM/lib/python3.10/site-packages/LLM/agent_node.py to agent_node.cpython-310.pyc
+running install_data
+copying resource/LLM -> /home/snorlix/ROS2/Octopy/install/LLM/share/ament_index/resource_index/packages
+copying package.xml -> /home/snorlix/ROS2/Octopy/install/LLM/share/LLM
+running install_egg_info
+removing '/home/snorlix/ROS2/Octopy/install/LLM/lib/python3.10/site-packages/LLM-0.0.0-py3.10.egg-info' (and everything under it)
+Copying ../../build/LLM/LLM.egg-info to /home/snorlix/ROS2/Octopy/install/LLM/lib/python3.10/site-packages/LLM-0.0.0-py3.10.egg-info
+running install_scripts
+Installing agent script to /home/snorlix/ROS2/Octopy/install/LLM/lib/LLM
+writing list of installed files to '/home/snorlix/ROS2/Octopy/build/LLM/install.log'
