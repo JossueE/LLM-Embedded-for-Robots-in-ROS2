@@ -2,6 +2,21 @@
     "knowledge": [
       {
         "triggers": [
+          "¿Cómo te llamas?",
+          "¿Cuál es tu nombre?",
+          "¿Tienes apellido?"
+        ],
+        "answer": "Mi nombre es Octybot"
+      },
+      {
+        "triggers": [
+          "Quién eres?",
+          "¿Qué eres?"
+        ],
+        "answer": "Soy Octybot, tu amigo robot."
+      },
+      {
+        "triggers": [
           "¿Cuál es tu horario de carga?",
           "¿A qué hora cargas?",
           "¿En qué horario te cargas?",
