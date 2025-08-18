@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'agent = LLM.agent_node:main',
+            'stt = LLM.speech_to_text:main',
         ],
     },
 )
