@@ -30,13 +30,14 @@ It is optimized to run **on embedded hardware**, such as industrial PCs or light
 - Python 3.10.12 
 - Git, CMake, colcon
 - (Optional) NVIDIA CUDA for GPU acceleration
-- (Suggestion) Use Virtual Enviroment
+- (Suggestion) Use Virtual Enfoment
 
 **Models**
 - A `.gguf` LLM compatible with `llama.cpp`
 - The project is working with `Llama-3.2-3B-Instruct-Q4_0` 
   - **Download:** [bartowski/Llama-3.2-3B-Instruct-GGUF](https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/tree/main)
-[!IMPORTANT] If you want to change the model, remember to use which one who can Support Tool Calls and Functions
+> [!IMPORTANT] 
+> If you want to change the model, remember to use which one who can Support Tool Calls and Functions
 - *(Optional)* A **faster-whisper** model if you use the STT node
 
 **System packages (recommended)**
@@ -88,7 +89,8 @@ source install/setup.bash
 ---
 
 **1. Start the agent node**
-[!NOTE] Remember to Start Your Virutual Enviroment 
+> [!NOTE]
+> Remember to start your virtual **environment**:
 ```bash
 ros2 run LLM agent
 ```
@@ -108,7 +110,8 @@ ros2 run LLM agent
 ```
 **2. Test the Node**
 While having the last terminal open, start a new one. 
-[!IMPORTANT] Everytime that we open a New Terminal, we will source
+> [!IMPORTANT]
+> Everytime that we open a New Terminal, we will source
 ```bash
 #We source the terminal
 source install/setup.bash
