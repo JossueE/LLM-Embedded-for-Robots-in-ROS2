@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'agent = LLM.agent_node:main',
-            'listener = LLM.audio_listener:main',
+            'audio_listener = LLM.audio_listener:main',
             'text_to_speech = LLM.stream:main',
         ],
     },

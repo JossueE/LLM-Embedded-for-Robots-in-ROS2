@@ -10,7 +10,7 @@ Inference::Inference(const rclcpp::NodeOptions& options)
   rclcpp::SubscriptionOptions sub_options;
   sub_options.callback_group = cb_group;
   audio_sub_ = create_subscription<std_msgs::msg::Int16MultiArray>(
-      "audio", rclcpp::SensorDataQoS(), 
+      "/audio", rclcpp::SensorDataQoS(), 
       std::bind(&Inference::on_audio_, this, std::placeholders::_1), sub_options);
 
   // parameter callback handle
@@ -62,7 +62,7 @@ void Inference::declare_parameters_() {
   // https://github.com/ggerganov/whisper.cpp/blob/a4bb2df36aeb4e6cfb0c1ca9fbcf749ef39cc852/whisper.h#L351
   declare_parameter("wparams.language", "en");
   declare_parameter("wparams.n_threads", 4);
-  
+
   declare_parameter("wparams.print_progress", false);
   declare_parameter("cparams.flash_attn", true);
   declare_parameter("cparams.gpu_device", 0);

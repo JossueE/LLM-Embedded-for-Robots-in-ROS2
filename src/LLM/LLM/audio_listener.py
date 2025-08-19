@@ -16,7 +16,7 @@ class AudioListenerNode(Node):
             parameters=[
                 ("channels", 1),
                 ("frames_per_buffer", 1000),
-                ("rate", 48000),
+                ("rate", 16000),
             ],
         )
 
@@ -45,12 +45,12 @@ class AudioListenerNode(Node):
             input=True,
             frames_per_buffer=self.frames_per_buffer_,
             rate=self.rate_,
-            input_device_index=-1,
+            input_device_index=10,  # Cambia 0 por el índice del dispositivo que quieras usar
             #input_device_index=DEVICE_INDEX,
         )
 
         self.audio_publisher_ = self.create_publisher(
-            Int16MultiArray, "~/audio", 5
+            Int16MultiArray, "/audio", 5
         )
 
         self.audio_publisher_timer_ = self.create_timer(
@@ -72,7 +72,7 @@ class AudioListenerNode(Node):
             MultiArrayDimension(label="audio", size=self.frames_per_buffer_, stride=1)
         )
         self.audio_publisher_.publish(audio_msg)
-        print(audio_msg)
+        #print(audio_msg)
 
     def cleanup_(self):
         self.stream_.close()
