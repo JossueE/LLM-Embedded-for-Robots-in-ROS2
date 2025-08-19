@@ -46,7 +46,7 @@ class TranscriptSubscriber(Node):
         # Subscribe to the audio transcript topic
         self.subscription = self.create_subscription(
             AudioTranscript,
-            '/audio_listener/audio',
+            '/whisper/transcript_stream',
             self.transcript_callback,
             10)
 
