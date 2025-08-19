@@ -1,0 +1,12 @@
+# requirements.txt
+
+# ROS2 Python client
+rclpy
+
+# Audio captura / procesamiento
+pyaudio
+sounddevice
+webrtcvad
+
+# Utilidades
+numpy
