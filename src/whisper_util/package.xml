@@ -4,7 +4,7 @@
   <name>whisper_util</name>
   <version>1.4.0</version>
   <description>ROS 2 wrapper for whisper.cpp.</description>
-  <maintainer email="m.huber_1994@hotmail.de">mhubii</maintainer>
+  <maintainer email="kadavetar10@icloud.com">snorlix</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

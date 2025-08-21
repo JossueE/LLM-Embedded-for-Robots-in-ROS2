@@ -12,6 +12,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include "std_msgs/msg/int16_multi_array.hpp"
+#include "std_msgs/msg/bool.hpp"
 
 #include "whisper_util/audio_buffers.hpp"
 #include "whisper_util/model_manager.hpp"
@@ -38,6 +39,10 @@ protected:
   rclcpp::Subscription<std_msgs::msg::Int16MultiArray>::SharedPtr audio_sub_;
   void on_audio_(const std_msgs::msg::Int16MultiArray::SharedPtr msg);
 
+  // wake word subscription
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr flag_sub_;
+  void on_flag_wake_word_(const std_msgs::msg::Bool::SharedPtr msg);
+
   // publsiher
   void timer_callback();
   rclcpp::TimerBase::SharedPtr timer_;
@@ -62,8 +67,13 @@ private:
   // Control if whisper is running
   bool active_;
 
+  bool was_active_;
+
+
   // Helper/debug functions
   void on_audio_debug_print_(const std_msgs::msg::Int16MultiArray::SharedPtr msg);
+  void reset_audio_ring_on_activate_(); 
+  void process_once_on_deactivate_(); 
 
 };
 } // end of namespace whisper

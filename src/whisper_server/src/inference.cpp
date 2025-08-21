@@ -2,16 +2,21 @@
 
 namespace whisper {
 Inference::Inference(const rclcpp::NodeOptions& options)
-    : Node("inference", options), language_("en") {
+    : Node("inference", options), language_("es") {
   declare_parameters_();
 
   // audio subscription:  Allow parallel callbacks
   auto cb_group = create_callback_group(rclcpp::CallbackGroupType::Reentrant);
   rclcpp::SubscriptionOptions sub_options;
   sub_options.callback_group = cb_group;
+
   audio_sub_ = create_subscription<std_msgs::msg::Int16MultiArray>(
       "/audio", rclcpp::SensorDataQoS(), 
       std::bind(&Inference::on_audio_, this, std::placeholders::_1), sub_options);
+  
+  flag_sub_ = create_subscription<std_msgs::msg::Bool>(
+      "/flag_wake_word", 10,
+      std::bind(&Inference::on_flag_wake_word_, this, std::placeholders::_1), sub_options);
 
   // parameter callback handle
   on_parameter_set_handle_ = add_on_set_parameters_callback(
@@ -32,6 +37,7 @@ Inference::Inference(const rclcpp::NodeOptions& options)
   publisher_ = create_publisher<whisper_idl::msg::WhisperTokens>("tokens", 10);
 
   active_ = get_parameter("active").as_bool();
+  was_active_ = active_;
 }
 
 void Inference::timer_callback()
@@ -52,7 +58,7 @@ void Inference::timer_callback()
 
 void Inference::declare_parameters_() {
   // buffer parameters
-  declare_parameter("buffer_capacity", 2);
+  declare_parameter("buffer_capacity", 3);
   declare_parameter("callback_ms", 200);
   declare_parameter("active", false);
 
@@ -60,7 +66,7 @@ void Inference::declare_parameters_() {
   declare_parameter("model_name", "tiny");
   // consider other parameters:
   // https://github.com/ggerganov/whisper.cpp/blob/a4bb2df36aeb4e6cfb0c1ca9fbcf749ef39cc852/whisper.h#L351
-  declare_parameter("wparams.language", "en");
+  declare_parameter("wparams.language", "es");
   declare_parameter("wparams.n_threads", 4);
 
   declare_parameter("wparams.print_progress", false);
@@ -122,7 +128,64 @@ Inference::on_parameter_set_(const std::vector<rclcpp::Parameter> &parameters) {
   return result;
 }
 
+void Inference::process_once_on_deactivate_() {
+  // Bloquea whisper para no competir con el timer
+  std::unique_lock<std::mutex> lk(whisper_mutex_, std::defer_lock);
+  if (!lk.try_lock()) {
+    RCLCPP_WARN(get_logger(), "Whisper ocupado; omito proceso final en desactivación");
+    return;
+  }
+
+  const auto& [data, timestamp] = audio_ring_->peak();
+
+  if (data.empty()) {
+    RCLCPP_INFO(get_logger(), "No hay audio en buffer al desactivar; nada que procesar.");
+    return;
+  }
+
+  // Crea mensaje y corre inferencia "batch"
+  auto msg = create_message_();
+  msg.stamp = chrono_to_ros_msg(timestamp);
+
+  inference_(data, msg);      // procesa TODO lo que quedó en el ring
+  publisher_->publish(msg);   // publica una sola vez
+
+  auto& clk = *get_clock();
+  RCLCPP_INFO_THROTTLE(get_logger(), clk, 5000,
+                       "Final batch on deactivate | duration=%ldms",
+                       msg.inference_duration);
+}
+
+void Inference::reset_audio_ring_on_activate_() {
+  // Si tu AudioRing tiene clear(), úsalo. Si no, reconstruye.
+  audio_ring_.reset(); // descarta el anterior
+  auto audio_ring_s_ = std::chrono::seconds(get_parameter("buffer_capacity").as_int());
+  audio_ring_ = std::make_unique<AudioRing>(audio_ring_s_);
+}
+
+
+void Inference::on_flag_wake_word_(const std_msgs::msg::Bool::SharedPtr msg) {
+  const bool new_active = msg->data;
+
+  // Transición: false -> true (activar)
+  if (!active_ && new_active) {
+    reset_audio_ring_on_activate_();  // arranca una toma fresca
+    active_ = true;
+    RCLCPP_INFO(get_logger(), "WakeWord: ACTIVE=TRUE (grabando y procesando en streaming)");
+  }
+
+  // Transición: true -> false (desactivar)
+  if (active_ && !new_active) {
+    active_ = false;
+    RCLCPP_INFO(get_logger(), "WakeWord: ACTIVE=FALSE (procesar una vez lo grabado)");
+    process_once_on_deactivate_();    // procesa lote final
+  }
+
+  was_active_ = active_;
+}
+
 void Inference::on_audio_(const std_msgs::msg::Int16MultiArray::SharedPtr msg) {
+  if (!active_) return; 
   if ( !audio_ring_->is_audio_start_set() ) {
     audio_ring_->set_start_timestamp(ros_time_to_chrono(get_clock()->now()));
   }

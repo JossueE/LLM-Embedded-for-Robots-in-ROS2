@@ -23,8 +23,18 @@ def generate_launch_description() -> LaunchDescription:
     # launch audio listener
     ld.add_action(
         Node(
+
             package="LLM",
             executable="audio_listener",
+            output="screen",
+        )
+    )
+
+    ld.add_action(
+        Node(
+
+            package="LLM",
+            executable="wake_word_detector",
             output="screen",
         )
     )

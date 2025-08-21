@@ -2,16 +2,16 @@ whisper:
   inference:
     ros__parameters:
       # whisper
-      model_name: "tiny" # other models https://huggingface.co/ggerganov/whisper.cpp
+      model_name: "small" # other models https://huggingface.co/ggerganov/whisper.cpp
       wparams:
         language: "es"
         print_progress: false
-        n_threads: 4
+        n_threads: 8
       cparams:
         flash_attn: true
         gpu_device: 0
         use_gpu: true
 
       # buffer
-      buffer_capacity: 20 # seconds
+      buffer_capacity: 3 # seconds
       callback_ms: 1000 # milliseconds
