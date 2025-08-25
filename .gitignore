@@ -46,6 +46,7 @@ log/
 *.pdb
 
 # LLM weights and large assets
+*.onnx
 *.gguf
 *.pt
 *.bin
