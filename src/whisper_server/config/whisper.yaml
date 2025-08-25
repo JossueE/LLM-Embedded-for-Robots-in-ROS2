@@ -2,9 +2,9 @@ whisper:
   inference:
     ros__parameters:
       # whisper
-      model_name: "small" # other models https://huggingface.co/ggerganov/whisper.cpp
+      model_name: "base.en" # other models https://huggingface.co/ggerganov/whisper.cpp
       wparams:
-        language: "es"
+        language: "en"
         print_progress: false
         n_threads: 8
       cparams:

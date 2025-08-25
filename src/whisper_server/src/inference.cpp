@@ -98,6 +98,7 @@ void Inference::initialize_whisper_() {
   whisper_->cparams.flash_attn = get_parameter("cparams.flash_attn").as_bool();
   whisper_->cparams.gpu_device = get_parameter("cparams.gpu_device").as_int();
   whisper_->cparams.use_gpu = get_parameter("cparams.use_gpu").as_bool();
+  whisper_->wparams.single_segment = true; // always single segment for now
 
   RCLCPP_INFO(get_logger(), "Initializing model %s...", model_name.c_str());
   whisper_->initialize(model_manager_->get_model_path(model_name));
@@ -108,7 +109,7 @@ rcl_interfaces::msg::SetParametersResult
 Inference::on_parameter_set_(const std::vector<rclcpp::Parameter> &parameters) {
   rcl_interfaces::msg::SetParametersResult result;
   for (const auto &parameter : parameters) {
-    if ( parameter.get_name() == "n_threads" ) {
+    if ( parameter.get_name() == "wparams.n_threads" ) {
       whisper_->wparams.n_threads = parameter.as_int();
       RCLCPP_INFO(get_logger(), "Parameter %s set to %d.", parameter.get_name().c_str(),
                   whisper_->wparams.n_threads);

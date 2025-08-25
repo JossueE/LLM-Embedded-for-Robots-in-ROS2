@@ -34,9 +34,7 @@ class WakeWordDetector(Node):
         self.audio_sub = self.create_subscription(
             Int16MultiArray, "/audio", self.audio_callback, 10
         )
-        self.trigger_pub = self.create_publisher(
-            Int16MultiArray, "/wake_word_audio", 10
-        )
+
         self.flag_wake_word = self.create_publisher(
             Bool, "/flag_wake_word", 10
         )
@@ -47,11 +45,8 @@ class WakeWordDetector(Node):
 
         self.listening = False
         self.listen_timer = None
-        self.recorded_audio: List[int] = []
 
     def audio_callback(self, msg: Int16MultiArray) -> None:
-        if self.listening:
-            self.recorded_audio.extend(msg.data)
 
         audio_bytes = np.array(msg.data, dtype=np.int16).tobytes()
         frame_bytes = int(self.sample_rate / 1000 * 20) * 2  # 20ms
@@ -72,28 +67,15 @@ class WakeWordDetector(Node):
         if self.listening:
             return
         self.listening = True
-        self.recorded_audio = []
         self.flag_wake_word.publish(Bool(data=True))
         duration = self.get_parameter("listen_seconds").value
         self.listen_timer = self.create_timer(duration, self.deactivate_whisper)
 
-    def deactivate_whisper(self) -> None:
+    def deactivate_whisper(self) -> None:  
         if self.listen_timer is not None:
             self.listen_timer.cancel()
-            self.listen_timer = None
-        if self.recorded_audio:
-            msg = Int16MultiArray()
-            msg.data = self.recorded_audio
-            msg.layout.data_offset = 0
-            msg.layout.dim.append(
-                MultiArrayDimension(
-                    label="audio", size=len(self.recorded_audio), stride=1
-                )
-            )
-            self.trigger_pub.publish(msg)
-            print("1 Wake word audio published")
-            self.recorded_audio = []
-
+            self.listen_timer = None  
+        print("1 Wake word audio published")
         self.flag_wake_word.publish(Bool(data=False))
         self.listening = False
 
