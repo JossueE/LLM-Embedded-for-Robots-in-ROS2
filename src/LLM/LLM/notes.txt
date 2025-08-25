@@ -1,2 +1,0 @@
-Para que funcione se necesita 
-sudo apt install python3-rosdep python3-colcon-common-extensions portaudio19-dev

@@ -11,78 +11,126 @@ from rclpy.parameter import Parameter
 
 
 class WakeWordDetector(Node):
-    """Detects a wake word using Vosk and VAD and toggles Whisper inference."""
+    """Detects a wake word using Vosk + VAD con baja latencia."""
 
     def __init__(self) -> None:
         super().__init__("wake_word_detector")
 
         self.declare_parameter("sample_rate", 16000)
         self.declare_parameter("vosk_model_path", "/home/snorlix/vosk-model-small-es-0.42")
-        self.declare_parameter("wake_word", "ok robot")
+        self.declare_parameter("wake_word", "ok robot")      # palabra “principal”
         self.declare_parameter("inference_node", "inference")
         self.declare_parameter("listen_seconds", 3.0)
+        self.declare_parameter("variants", ["ok robot", "okay robot", "hey robot"])
 
         self.sample_rate = self.get_parameter("sample_rate").value
         model_path = self.get_parameter("vosk_model_path").value
-        wake_word = self.get_parameter("wake_word").value
+        self.wake_word = str(self.get_parameter("wake_word").value).lower()
+        self.variants: List[str] = [str(v).lower() for v in self.get_parameter("variants").value]
 
-        self.vad = webrtcvad.Vad(2)
+        # VAD menos agresivo para no comerse el inicio (0–3; 1 es razonable)
+        self.vad = webrtcvad.Vad(1)
+
+        # Limita vocab a las variantes para que Vosk “tienda” a oírlas
+        # Construimos gramática JSON con las variantes
+        grammar = json.dumps(self.variants, ensure_ascii=False)
         self.model = vosk.Model(model_path)
-        # Restrict recognition to the wake word grammar
-        self.rec = vosk.KaldiRecognizer(self.model, self.sample_rate, f'["{wake_word}"]')
+        self.rec = vosk.KaldiRecognizer(self.model, self.sample_rate, grammar)
 
         self.audio_sub = self.create_subscription(
             Int16MultiArray, "/audio", self.audio_callback, 10
         )
-
-        self.flag_wake_word = self.create_publisher(
-            Bool, "/flag_wake_word", 10
-        )
+        self.flag_wake_word = self.create_publisher(Bool, "/flag_wake_word", 10)
         self.flag_wake_word.publish(Bool(data=False))
 
         self.param_client = self.get_parameter("inference_node").value
-        
 
         self.listening = False
         self.listen_timer = None
 
+        # Debounce de parciales: p.ej. 2 aciertos seguidos
+        self.partial_hits = 0
+        self.required_hits = 2
+
+        # 10 ms → menor latencia (160 muestras a 16 kHz)
+        self.frame_ms = 10
+        self.frame_bytes = int(self.sample_rate / 1000 * self.frame_ms) * 2  # int16 mono
+
+    def _norm(self, s: str) -> str:
+        # Normaliza a lower y quita tildes simples
+        s = s.lower()
+        return (s.replace("á","a").replace("é","e").replace("í","i")
+                 .replace("ó","o").replace("ú","u").replace("ü","u"))
+
+    def _matches_wake(self, text: str) -> bool:
+        t = self._norm(text)
+        for v in self.variants:
+            if self._norm(v) in t:
+                return True
+        return False
+
     def audio_callback(self, msg: Int16MultiArray) -> None:
-
+        # bytes de audio
         audio_bytes = np.array(msg.data, dtype=np.int16).tobytes()
-        frame_bytes = int(self.sample_rate / 1000 * 20) * 2  # 20ms
-        for i in range(0, len(audio_bytes) - frame_bytes + 1, frame_bytes):
-            frame = audio_bytes[i : i + frame_bytes]
 
+        # Procesa en frames cortos de 10 ms
+        fb = self.frame_bytes
+        for i in range(0, len(audio_bytes) - fb + 1, fb):
+            frame = audio_bytes[i : i + fb]
+
+            # Gate de VAD: si no parece voz, resetea hits y sigue
             if not self.vad.is_speech(frame, self.sample_rate):
+                self.partial_hits = 0
+                # IMPORTANTE: aún así alimentamos al recognizer para el timing interno
+                self.rec.AcceptWaveform(frame)
                 continue
-            
+
+            # Alimenta el recognizer
+            # 1) Si Vosk cree que hay “cierre” de palabra/frase
             if self.rec.AcceptWaveform(frame):
                 result = json.loads(self.rec.Result())
-                text = result.get("text", "").lower()
-                if self.get_parameter("wake_word").value in text:
-                    self.get_logger().info("Wake word detected")
+                text = result.get("text", "").lower().strip()
+                if text and self._matches_wake(text):
+                    self.get_logger().info(f"[FULL] Wake word: {text!r}")
                     self.activate_whisper()
+                    self.partial_hits = 0
+                    return
+                # Si el full no trae, cae a parciales de nuevo
+                self.partial_hits = 0
+            else:
+                # 2) Parcial de bajísima latencia
+                partial = json.loads(self.rec.PartialResult()).get("partial", "").lower().strip()
+                if partial:
+                    if self._matches_wake(partial):
+                        self.partial_hits += 1
+                        if self.partial_hits >= self.required_hits:
+                            self.get_logger().info(f"[PARTIAL] Wake word: {partial!r}")
+                            self.activate_whisper()
+                            self.partial_hits = 0
+                            return
+                    else:
+                        # si el parcial no contiene la clave, resetea el contador
+                        self.partial_hits = 0
 
     def activate_whisper(self) -> None:
         if self.listening:
             return
         self.listening = True
         self.flag_wake_word.publish(Bool(data=True))
-        duration = self.get_parameter("listen_seconds").value
+        duration = float(self.get_parameter("listen_seconds").value)
+        # Timer one-shot
         self.listen_timer = self.create_timer(duration, self.deactivate_whisper)
 
-    def deactivate_whisper(self) -> None:  
+    def deactivate_whisper(self) -> None:
         if self.listen_timer is not None:
             self.listen_timer.cancel()
-            self.listen_timer = None  
-        print("1 Wake word audio published")
+            self.listen_timer = None
         self.flag_wake_word.publish(Bool(data=False))
         self.listening = False
 
     def _set_inference_active(self, value: bool) -> None:
         param = Parameter("active", Parameter.Type.BOOL, value)
         future = self.param_client.set_parameters([param])
-        # We don't need to wait for completion but log result
         future.add_done_callback(
             lambda fut: self.get_logger().info(
                 f"Whisper active set to {value}: {fut.result().successful}"
