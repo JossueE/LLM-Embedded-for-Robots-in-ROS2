@@ -71,3 +71,5 @@ log/
 *.local
 **/config/local.*.json
 **/config/secret*.json
+model.onnx
+*.onnx
