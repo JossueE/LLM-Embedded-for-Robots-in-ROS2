@@ -22,9 +22,8 @@ setup(
         'console_scripts': [
             'agent = LLM.agent_node:main',
             'audio_listener = LLM.audio_listener:main',
-            'stream = LLM.stream:main',
-            'wake_word_detector = LLM.wake_word_detector:main',
-            'vosk = LLM.vosk:main',
+            'wake_word = LLM.wake_word_detector:main',
+            'stt = LLM.speech_to_text:main',
         ],
     },
 )

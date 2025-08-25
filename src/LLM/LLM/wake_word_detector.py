@@ -1,6 +1,14 @@
 import json
 from typing import List
 
+#This is Use for Donwload the model
+import os
+from pathlib import Path
+import urllib.request
+import tarfile
+import zipfile
+
+#To manage the audio stream
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -17,14 +25,12 @@ class WakeWordDetector(Node):
         super().__init__("wake_word_detector")
 
         self.declare_parameter("sample_rate", 16000)
-        self.declare_parameter("vosk_model_path", "/home/snorlix/vosk-model-small-es-0.42")
         self.declare_parameter("wake_word", "ok robot")      # palabra “principal”
         self.declare_parameter("inference_node", "inference")
         self.declare_parameter("listen_seconds", 3.0)
         self.declare_parameter("variants", ["ok robot", "okay robot", "hey robot"])
 
         self.sample_rate = self.get_parameter("sample_rate").value
-        model_path = self.get_parameter("vosk_model_path").value
         self.wake_word = str(self.get_parameter("wake_word").value).lower()
         self.variants: List[str] = [str(v).lower() for v in self.get_parameter("variants").value]
 
@@ -34,7 +40,10 @@ class WakeWordDetector(Node):
         # Limita vocab a las variantes para que Vosk “tienda” a oírlas
         # Construimos gramática JSON con las variantes
         grammar = json.dumps(self.variants, ensure_ascii=False)
+
+        model_path = self.ensure_vosk_model()
         self.model = vosk.Model(model_path)
+
         self.rec = vosk.KaldiRecognizer(self.model, self.sample_rate, grammar)
 
         self.audio_sub = self.create_subscription(
@@ -56,16 +65,32 @@ class WakeWordDetector(Node):
         self.frame_ms = 10
         self.frame_bytes = int(self.sample_rate / 1000 * self.frame_ms) * 2  # int16 mono
 
-    def _norm(self, s: str) -> str:
+    def ensure_vosk_model(self) -> None:
+        base_dir = Path(__file__).resolve().parent
+        model_dir = base_dir / "vosk-model-small-es-0.42"
+        url = "https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip"
+
+        if not model_dir.exists():
+            zip_path = base_dir / "vosk-model-small-es-0.42.zip"
+            self.get_logger().info(f"[VOSK] Descargando modelo en {zip_path} ...")
+            urllib.request.urlretrieve(url, zip_path)
+
+            self.get_logger().info(f"[VOSK] Extrayendo en {base_dir} ...")
+            with zipfile.ZipFile(zip_path, "r") as zf:
+                zf.extractall(base_dir)
+            os.remove(zip_path)
+        return str(model_dir)
+
+    def norm(self, s: str) -> str:
         # Normaliza a lower y quita tildes simples
         s = s.lower()
         return (s.replace("á","a").replace("é","e").replace("í","i")
                  .replace("ó","o").replace("ú","u").replace("ü","u"))
 
-    def _matches_wake(self, text: str) -> bool:
-        t = self._norm(text)
+    def matches_wake(self, text: str) -> bool:
+        t = self.norm(text)
         for v in self.variants:
-            if self._norm(v) in t:
+            if self.norm(v) in t:
                 return True
         return False
 
@@ -90,7 +115,7 @@ class WakeWordDetector(Node):
             if self.rec.AcceptWaveform(frame):
                 result = json.loads(self.rec.Result())
                 text = result.get("text", "").lower().strip()
-                if text and self._matches_wake(text):
+                if text and self.matches_wake(text):
                     self.get_logger().info(f"[FULL] Wake word: {text!r}")
                     self.activate_whisper()
                     self.partial_hits = 0
@@ -101,7 +126,7 @@ class WakeWordDetector(Node):
                 # 2) Parcial de bajísima latencia
                 partial = json.loads(self.rec.PartialResult()).get("partial", "").lower().strip()
                 if partial:
-                    if self._matches_wake(partial):
+                    if self.matches_wake(partial):
                         self.partial_hits += 1
                         if self.partial_hits >= self.required_hits:
                             self.get_logger().info(f"[PARTIAL] Wake word: {partial!r}")

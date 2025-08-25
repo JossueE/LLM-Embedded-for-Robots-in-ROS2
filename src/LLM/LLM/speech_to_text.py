@@ -159,13 +159,6 @@ class SileroSTTNode(Node):
         if not audio_bytes:
             return None
 
-        with wave.open(f"/tmp/stt.wav", "wb") as w:
-            w.setnchannels(1)
-            w.setsampwidth(2)  # int16
-            w.setframerate(self.rate)  # debería ser 16000
-            w.writeframes(audio_bytes)
-        self.get_logger().info(f"💾 Guardé /tmp/stt.wav")
-
         # Int16 → float32 [-1, 1]
         pcm = np.frombuffer(audio_bytes, dtype=np.int16)
         if pcm.size == 0:
