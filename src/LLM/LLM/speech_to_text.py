@@ -8,6 +8,7 @@ import onnxruntime
 import numpy as np
 import torch
 from omegaconf import OmegaConf
+#import wave
 
 import rclpy
 from rclpy.node import Node
@@ -161,6 +162,15 @@ class SileroSTTNode(Node):
         pcm = np.frombuffer(audio_bytes, dtype=np.int16)
         if pcm.size == 0:
             return None
+        
+        #For Debugging purposes
+
+        #with wave.open(f"/tmp/stt.wav", "wb") as w:
+        #    w.setnchannels(1)
+        #    w.setsampwidth(2)  # int16
+        #    w.setframerate(self.rate)  # debería ser 16000
+        #    w.writeframes(audio_bytes)
+        #self.get_logger().info(f"💾 Guardé /tmp/stt.wav")
 
         x = pcm.astype(np.float32) / 32768.0
 
