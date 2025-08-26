@@ -31,7 +31,7 @@ def generate_launch_description() -> LaunchDescription:
     ld.add_action(
         Node(
             package="LLM",
-            executable="agent",
+            executable="llm_main",
             output="screen",
         )
     )

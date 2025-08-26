@@ -2,9 +2,9 @@
     "knowledge": [
       {
         "triggers": [
-          "¿Cómo te llamas?",
-          "¿Cuál es tu nombre?",
-          "¿Tienes apellido?"
+          "cómo|no te llamas",
+          "cuál es tu nombre",
+          "tienes apellido"
         ],
         "answer": "Mi nombre es Octybot"
       },
