@@ -15,7 +15,23 @@ def generate_launch_description() -> LaunchDescription:
     ld.add_action(
         Node(
             package="LLM",
-            executable="wake_word_detector",
+            executable="wake_word",
+            output="screen",
+        )
+    )
+
+    ld.add_action(
+        Node(
+            package="LLM",
+            executable="stt",
+            output="screen",
+        )
+    )
+
+    ld.add_action(
+        Node(
+            package="LLM",
+            executable="agent",
             output="screen",
         )
     )

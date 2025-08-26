@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 import threading
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import Optional
-
-import wave
 
 import onnx
 import onnxruntime

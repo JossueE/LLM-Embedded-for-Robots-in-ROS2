@@ -95,7 +95,7 @@ class OctopyAgent(Node):
             "Responde en español, conciso (<=120 palabras)."
         ))
 
-        self.declare_parameter('model', os.environ.get('OCTOPY_MODEL', '~/llama.cpp/LLM/Llama-3.2-3B-Instruct-Q4_0.gguf'))
+        self.declare_parameter('model', os.environ.get('OCTOPY_MODEL', '~/llama.cpp/LLM/qwen2.5-3b-instruct-q4_k_m.gguf'))
         self.declare_parameter('threads', int(os.environ.get('OCTOPY_THREADS', str(os.cpu_count() or 4))))
         self.declare_parameter('ctx', int(os.environ.get('OCTOPY_CTX', '2048')))
         self.declare_parameter('kb_path', os.environ.get('OCTOPY_KB', '~/ROS2/Octopy/src/LLM/config/kb.json'))
@@ -122,14 +122,14 @@ class OctopyAgent(Node):
         self._llm_lock = threading.Lock()
 
         # ROS I/O
-        self._pub = self.create_publisher(String, '/octopy/answer', 10)
-        self._nav_pub = self.create_publisher(String, '/octopy/nav_cmd', 10)
+        self._pub = self.create_publisher(String, "/octopy/answer", 10)
+        self._nav_pub = self.create_publisher(String, "/octopy/nav_cmd", 10)
         self._last_amcl: Optional[PoseWithCovarianceStamped] = None
         self._last_batt: Optional[BatteryState] = None
 
-        self.create_subscription(PoseWithCovarianceStamped, '/amcl_pose', self._amcl_cb, 10)
-        self.create_subscription(BatteryState, '/battery_state', self._batt_cb, 10)
-        self.create_subscription(String, '/octopy/ask', self._on_ask, 10)
+        self.create_subscription(PoseWithCovarianceStamped, "/amcl_pose", self._amcl_cb, 10)
+        self.create_subscription(BatteryState, "/battery_state", self._batt_cb, 10)
+        self.create_subscription(String, "/transcript", self._on_ask, 10)
 
         # KB / Poses
         self._kb_items: List[Dict[str, str]] = []

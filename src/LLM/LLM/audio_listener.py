@@ -16,7 +16,7 @@ class AudioListenerNode(Node):
                 ("channels", 1),
                 ("frames_per_buffer", 1000),  # ~62.5 ms a 16 kHz
                 ("rate", 16000),
-                ("device_index", 11),         # <- hazlo parámetro
+                ("device_index", 11),         
             ],
         )
 

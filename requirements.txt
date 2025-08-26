@@ -1,12 +1,27 @@
-# requirements.txt
+# Runtime dependencies for LLM Embedded for Robots in ROS2
 
-# ROS2 Python client
+# ROS2 Python client and launch utilities
 rclpy
+launch
+launch_ros
 
-# Audio captura / procesamiento
-pyaudio
-sounddevice
-webrtcvad
+# LLM inference
+llama-cpp-python
 
-# Utilidades
+# Audio capture / processing
 numpy
+pyaudio
+webrtcvad
+vosk
+
+# Speech-to-text
+torch
+onnx
+onnxruntime
+omegaconf
+
+# Testing tools
+pytest
+ament-copyright
+ament-flake8
+ament-pep257

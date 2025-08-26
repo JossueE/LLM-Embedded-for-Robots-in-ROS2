@@ -11,7 +11,7 @@ It is optimized to run **on embedded hardware**, such as industrial PCs or light
 
 ## 🚀 Features
 
-- **ROS2 Integration**: Subscribes and publishes to `/octopy/ask` and `/octopy/answer` topics.
+- **ROS2 Integration**: Subscribes and publishes to `/transcript` and `/octopy/answer` topics.
 - **Tool-calling**: The model can trigger specific functions:
   - `get_current_pose()` → Current robot pose from `/amcl_pose`.
   - `lookup_named_pose(name)` → Predefined static poses.
@@ -32,14 +32,6 @@ It is optimized to run **on embedded hardware**, such as industrial PCs or light
 - (Optional) NVIDIA CUDA for GPU acceleration
 - (Suggestion) Use Virtual Enfoment
 
-**Models**
-- A `.gguf` LLM compatible with `llama.cpp`
-- The project is working with `Llama-3.2-3B-Instruct-Q4_0` 
-  - **Download:** [bartowski/Llama-3.2-3B-Instruct-GGUF](https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/tree/main)
-> [!IMPORTANT] 
-> If you want to change the model, remember to use which one who can Support Tool Calls and Functions
-- *(Optional)* A **faster-whisper** model if you use the STT node
-
 **System packages (recommended)**
 ```bash
 sudo apt update
@@ -49,6 +41,31 @@ sudo apt install -y python3-rosdep python3-colcon-common-extensions \
 sudo apt install -y portaudio19-dev
 ```
 ---
+
+## 🤖 Models
+
+> [!TIP]
+> The code automatically downloads the **Spanish** variants of the models used here.  
+> To switch languages, update the downloader’s URL/model name in the code.
+
+### LLM Assistant
+- A `.gguf` LLM compatible with `llama.cpp`.
+- Default: **Llama-3.2-3B-Instruct-Q4_0**  
+  - **Download:** [bartowski/Llama-3.2-3B-Instruct-GGUF](https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/tree/main)
+
+> [!IMPORTANT]
+> If you change the model, choose one that supports **Tool Calls / Function Calling**.
+
+### Speech-to-Text
+- The **Wake Word Detector** uses **`vosk-model-small-es-0.42`**.  
+  - **Other models:** <https://alphacephei.com/vosk/models>
+- The **STT** node supports **Silero** models in `.onnx`.  
+  - **Docs & downloads:** <https://github.com/snakers4/silero-models?tab=readme-ov-file>
+
+> [!NOTE]
+> The PyTorch Spanish Silero package has historically required **Python 3.9**.  
+> If you’re on a newer Python version, prefer the **ONNX** variant.
+
 
 ## ⚙️ Installation 
 
@@ -266,8 +283,7 @@ It routes the request to the correct internal method and returns that method’s
         if name == "nav_to_place":
             return self._tool_nav_to_place(args.get("text", ""), bool(args.get("simulate", False)))
         if name == "<functio_name>":
-            return self.<new_function>(define the arguments if you need)))
+            return self.<new_function>(define the arguments if you need)
         return {"error": "tool_desconocida", "name": name}
-
-)
+    )
 ```

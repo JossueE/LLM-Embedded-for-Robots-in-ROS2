@@ -5,14 +5,13 @@ from typing import List
 import os
 from pathlib import Path
 import urllib.request
-import tarfile
 import zipfile
 
 #To manage the audio stream
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int16MultiArray, MultiArrayDimension, Bool
+from std_msgs.msg import Int16MultiArray, Bool
 import webrtcvad
 import vosk
 from rclpy.parameter import Parameter
@@ -59,7 +58,7 @@ class WakeWordDetector(Node):
 
         # Debounce de parciales: p.ej. 2 aciertos seguidos
         self.partial_hits = 0
-        self.required_hits = 2
+        self.required_hits = 3
 
         # 10 ms → menor latencia (160 muestras a 16 kHz)
         self.frame_ms = 10
