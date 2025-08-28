@@ -107,6 +107,7 @@ class PosesIndex:
         if best_k and best_s >= 0.70:
             return {**self.by_key[best_k].__dict__, "note":"fuzzy"}
         return {"error":"no_encontrado"}
+        
 
 def quat_to_yaw_deg(q) -> float:
     siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)

@@ -12,7 +12,7 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 from .llm_utils.llm_tools import KB, PosesIndex, quat_to_yaw_deg
 from .llm_utils.llm_client import LLM
 from .llm_utils.llm_router import Router
-from .llm_utils.llm_intentions import extract_place_query, norm_text
+from .llm_utils.llm_intentions import extract_place_query, norm_text, split_and_prioritize
 
 class OctopyAgent(Node):
     def __init__(self):
@@ -42,7 +42,18 @@ class OctopyAgent(Node):
     def _on_ask(self, msg: String):      
         text = msg.data.strip()
         try:
-            ans = self.router.handle(text)
+            actions = split_and_prioritize(text, self.router.kb)
+            for action in actions:
+                print(action, flush=True) 
+                data = action.get("params", {}).get("data")
+                kind = action.get("kind")
+                ans = self.router.handle(data,kind)
+                if not isinstance(ans, str):
+                    ans = json.dumps(ans, ensure_ascii=False)
+                self.pub.publish(String(data=ans))        # ← publica ya
+                self.get_logger().info(ans)
+            return
+
         except Exception as e:
             self.get_logger().error(f"Error: {e}")
             ans = json.dumps({"error": type(e).__name__, "msg": str(e)})
