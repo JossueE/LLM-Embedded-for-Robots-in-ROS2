@@ -3,6 +3,7 @@ import threading
 from pathlib import Path
 from typing import Optional
 
+import time
 import onnx
 import onnxruntime
 import numpy as np
@@ -53,7 +54,7 @@ class SileroSTTNode(Node):
                 repo_or_dir="snakers4/silero-models",
                 model="silero_stt",          # stt
                 language=self.language,      # depende del modelo disponible
-                device="cpu" if self.device not in ("gpu", "cpu") else self.device,
+                device="cpu" if self.device not in ("cuda", "cpu") else self.device,
             )
         except Exception as e:
             self.get_logger().error(f"No se pudo cargar Silero STT: {e}")
@@ -83,6 +84,7 @@ class SileroSTTNode(Node):
         self._prev_flag: bool = False
         self._buffer = bytearray()
         self._lock = threading.Lock()
+        self.state_machine_flag = ""
 
         # Worker para transcribir sin bloquear callbacks
         self._work_queue: list[bytes] = []
@@ -98,13 +100,21 @@ class SileroSTTNode(Node):
         self.flag_sub = self.create_subscription(
             Bool, "/flag_wake_word", self.flag_callback, 10, callback_group=cb_group
         )
+        self.state_machine_sub = self.create_subscription(
+            String, "/state_machine_flag", self.state_machine_function, 10
+        )
 
+        self.state_machine_publisher = self.create_publisher(
+            String, "/state_machine_flag", 10
+        )
         self.get_logger().info(
             f"Silero listo ✅ SR={self.rate}ch={self.channels} device={self.device} lang={self.language}\n"
             "Transcribe cuando /flag_wake_word cae de True a False."
         )
 
     # -------------------- Callbacks --------------------
+    def state_machine_function(self, msg: String) -> None:
+        self.state_machine_flag = msg.data
 
     def audio_callback(self, msg: Int16MultiArray) -> None:
         """Acumula frames Int16 mientras flag sea True."""
@@ -142,11 +152,16 @@ class SileroSTTNode(Node):
             try:
                 text = self._stt_from_bytes(chunk)
                 if text:
+                    self.state_machine_publisher.publish(String(data="main_active"))
+                    time.sleep(0.01)
                     self.pub_transcript.publish(String(data=text))
                     self.get_logger().info(f"📝 {text}")
                 else:
+                    self.state_machine_publisher.publish(String(data="wake_word"))
                     self.get_logger().info("📝 (vacío)")
+                
             except Exception as e:
+                self.state_machine_publisher.publish(String(data="wake_word"))
                 self.get_logger().error(f"Error en STT: {e}")
 
     # -------------------- STT core --------------------
