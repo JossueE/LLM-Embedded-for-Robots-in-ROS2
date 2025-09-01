@@ -10,9 +10,13 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 
 
 from .llm_utils.llm_tools import KB, PosesIndex, quat_to_yaw_deg
-from .llm_utils.llm_client import LLM
+from .llm_utils.llm_client import LLM, ensure_stt_model
 from .llm_utils.llm_router import Router
 from .llm_utils.llm_intentions import extract_place_query, norm_text, split_and_prioritize
+
+DEFAULT_MODEL_FILENAME = "qwen2.5-3b-instruct-q4_k_m.gguf"
+DEFAULT_MODEL_URL = "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf?download=true"
+
 
 class OctopyAgent(Node):
     def __init__(self):
@@ -32,7 +36,8 @@ class OctopyAgent(Node):
         # Data
         self.kb = KB( os.path.expanduser(os.getenv("OCTOPY_KB", "~/ROS2/Octopy/src/LLM/config/kb.json")))
         self.poses = PosesIndex(os.path.expanduser(os.getenv("OCTOPY_POSES", "~/ROS2/Octopy/src/LLM/config/poses.json")))
-        self.llm = LLM()
+        self.model_stt = ensure_stt_model(DEFAULT_MODEL_FILENAME, DEFAULT_MODEL_URL)
+        self.llm = LLM(model_path=self.model_stt)
         self.router = Router(self.kb, self.poses, self.llm, self.tool_get_battery, self.tool_get_current_pose, self.tool_nav_to_place)
         self.get_logger().info('Octopy listo ✅  Publica en /transcript')
 

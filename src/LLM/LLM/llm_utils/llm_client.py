@@ -1,9 +1,12 @@
 from __future__ import annotations
 import threading
 import os
+from pathlib import Path
+import urllib.request
 import json
 from typing import Optional, Dict, Any
 from typing import Any, List
+from rclpy.logging import get_logger
 
 try:
     from llama_cpp import Llama
@@ -12,8 +15,17 @@ except Exception as e:
         f"No se pudo importar llama_cpp. Activa venv o instala llama-cpp-python. Detalle: {e}"
     )
 
+def ensure_stt_model(model_name:str , model_url:str) -> str:
+    base_dir = Path(__file__).resolve().parent
+    model_dir = base_dir / model_name
+    url = model_url
+    if not model_dir.exists():
+        print(f"[STT_Model] Descargando modelo en {model_dir} ...", flush=True)
+        urllib.request.urlretrieve(url, model_dir)
+    return str(model_dir)
+
 class LLM:
-    def __init__(self, system_prompt: str | None = None):
+    def __init__(self, model_path: str, system_prompt: str | None = None):
         self.system = system_prompt or (
             "Eres Octopy, asistente ROS2. Usa herramientas cuando apliquen.\n"
             "- Batería => 'Mi batería es: XX.X%'.\n"
@@ -28,8 +40,7 @@ class LLM:
 
         # Defaults sensatos (CPU-only). Ajusta por env si quieres.
         self.model_path = os.path.expanduser(
-            #os.getenv("OCTOPY_MODEL", "~/llama.cpp/LLM/qwen2.5-3b-instruct-q4_k_m.gguf")
-            os.getenv("OCTOPY_MODEL", "~/llama.cpp/LLM/qwen2.5-3b-instruct-q4_k_m.gguf")
+            os.getenv("OCTOPY_MODEL", model_path)
         )
         self.ctx = int(os.getenv("OCTOPY_CTX", "1024"))          # contexto razonable
         self.threads = int(os.getenv("OCTOPY_THREADS", str(os.cpu_count() or 4)))

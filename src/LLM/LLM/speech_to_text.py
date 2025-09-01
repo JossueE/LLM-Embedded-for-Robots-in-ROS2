@@ -108,7 +108,7 @@ class SileroSTTNode(Node):
             String, "/state_machine_flag", 10
         )
         self.get_logger().info(
-            f"Silero listo ✅ SR={self.rate}ch={self.channels} device={self.device} lang={self.language}\n"
+            f"Silero listo 🔊 SR={self.rate}ch={self.channels} device={self.device} lang={self.language}\n"
             "Transcribe cuando /flag_wake_word cae de True a False."
         )
 

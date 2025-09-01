@@ -16,6 +16,9 @@ import webrtcvad
 import vosk
 from rclpy.parameter import Parameter
 
+DEFAULT_MODEL_FILENAME = "vosk-model-small-es-0.42"
+DEFAULT_MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip"
+
 
 class WakeWordDetector(Node):
     """Detects a wake word using Vosk + VAD con baja latencia."""
@@ -78,13 +81,12 @@ class WakeWordDetector(Node):
     def state_machine_function(self, msg: String) -> None:
         self.state_machine_flag = msg.data
 
-    def ensure_vosk_model(self) -> None:
+    def ensure_vosk_model(self) -> str:
         base_dir = Path(__file__).resolve().parent
-        model_dir = base_dir / "vosk-model-small-es-0.42"
-        url = "https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip"
-
+        model_dir = base_dir / DEFAULT_MODEL_FILENAME
+        url = DEFAULT_MODEL_URL
         if not model_dir.exists():
-            zip_path = base_dir / "vosk-model-small-es-0.42.zip"
+            zip_path = base_dir / f"{DEFAULT_MODEL_FILENAME}.zip"
             self.get_logger().info(f"[VOSK] Descargando modelo en {zip_path} ...")
             urllib.request.urlretrieve(url, zip_path)
 
