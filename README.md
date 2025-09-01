@@ -44,7 +44,7 @@ $ cd LLM-Embedded-for-Robots-in-ROS2
 # Create a virtual environment
 $ python3 -m venv .venv
 $ source .venv/bin/activate
-$ pip install -U pip
+$ python -m pip install -U pip wheel setuptools
 ```
 ```bash
 # Install dependencies
