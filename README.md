@@ -66,11 +66,12 @@ The fisrt time, the models will be donwloaded, so it could take a little bit. Do
 ```bash
 [llm_main-4] [INFO] [xxxxxxxxxx.xxxxxxxxx] [octopy_agent]: Octopy listo ✅  Publica en /transcript
 ```
-After that, the signal of speech is
+and
 ```bash
 [stt-3] [INFO] [xxxxxxxxxx.xxxxxxxxxx] [silero_stt_node]: Silero listo 🔊 SR=16000ch=1 device=cpu lang=es
 [stt-3] Transcribe cuando /flag_wake_word cae de True a False.
 
+[tts-6] [INFO] [1756768229.614419483] [silero_tts_node]: Silero TTS listo 🔊 rate=24000 device=cpu lang=es speaker=v3_es
 ```
 
 ### Ask a question from a terminal

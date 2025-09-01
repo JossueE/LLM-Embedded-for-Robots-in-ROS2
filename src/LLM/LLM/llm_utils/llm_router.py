@@ -17,25 +17,24 @@ class Router:
 
     def handle(self, data: str, tipo: str ) -> str: 
         #print(tipo, flush=True) 
-        if tipo == "general": 
-            fuzzy_variable= self.kb.loockup(data) 
-            if fuzzy_variable.get('answer') and fuzzy_variable.get('score',0.0) >= 0.75: 
-                #print("[llm_router] hola mundo", flush=True)
-                return fuzzy_variable.get('answer').strip()
-            else: 
-                return self.llm.answer_general(data) 
-        if tipo == "battery": 
+        if tipo == "rag":
+            return data
+        
+        elif tipo == "general": 
+            return self.llm.answer_general(data) 
+            
+        elif tipo == "battery": 
             r = self.tool_get_batt() 
             pct = r.get('percentage') 
             return f"Mi batería es: {pct:.1f}%" if isinstance(pct,(int,float)) else "Aún no tengo lectura de batería." 
         
-        if tipo == "pose": 
+        elif tipo == "pose": 
             r = self.tool_get_pose() 
             if any(r.get(k) is None for k in ('x','y','yaw_deg')): 
                 return "Aún no tengo pose de AMCL." 
             return json.dumps({k:r.get(k) for k in ('x','y','yaw_deg','frame')}, ensure_ascii=False) 
         
-        if tipo == "navigate":
+        elif tipo == "navigate":
             r = self.tool_nav(data) 
             print(r, flush=True) 
             if r.get("ok"): 
@@ -46,6 +45,8 @@ class Router:
                     yaw, dist = _clamp_motion(plan.get("yaw", 0.0), plan.get("distance", 0.0)) 
                     return json.dumps({"yaw": yaw, "distance": dist}, ensure_ascii=False) 
                 return "No encontré ese destino ni entiendo la orden."
+        else:
+            return "Tu retorno no machea con nada, revisa split_and_prioritize en intentions"
 
             
 

@@ -3,6 +3,7 @@ from typing import Optional, Dict, Any
 import json
 import rclpy
 import os
+import time
 from rclpy.node import Node
 from std_msgs.msg import String
 from sensor_msgs.msg import BatteryState
@@ -23,7 +24,7 @@ class OctopyAgent(Node):
     def __init__(self):
         super().__init__('octopy_agent')
         # ROS IO
-        self.pub = self.create_publisher(String, '/octopy/answer', 10)
+        self.pub = self.create_publisher(String, '/answer', 10)
         self.nav_pub = self.create_publisher(String, '/octopy/nav_cmd', 10)
         self.last_amcl: Optional[PoseWithCovarianceStamped] = None
         self.last_batt: Optional[BatteryState] = None
@@ -64,16 +65,17 @@ class OctopyAgent(Node):
                     ans = self.router.handle(data,kind)
                     if not isinstance(ans, str):
                         ans = json.dumps(ans, ensure_ascii=False)
+                    self.state_machine_publisher.publish(String(data="text_to_speech"))
+                    time.sleep(0.01)
                     self.pub.publish(String(data=ans))       
                     self.get_logger().info(ans)
-                self.state_machine_publisher.publish(String(data="wake_word"))
                 return            
 
             except Exception as e:
                 self.get_logger().error(f"Error: {e}")
                 ans = json.dumps({"error": type(e).__name__, "msg": str(e)})
             self.pub.publish(String(data=ans))
-            self.state_machine_publisher.publish(String(data="wake_word"))
+            self.state_machine_publisher.publish(String(data="text_to_speech"))
             self.get_logger().info(ans)
         else:
             self.get_logger().warning("Actividad Previa en Curso")

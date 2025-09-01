@@ -19,11 +19,21 @@ def is_nav(t: str) -> bool:
     t = norm_text(t)
     return bool(re.search(r"\b(ve a|ve|gira|giera|ir|orientate|vete|avanza|dirigete|dir[ii]gete|camina|lleva|ir|hacia|hasta|a donde|adonde|vea|donde|queda|ubicacion|orienta|apunta|se[nn]ala)\b", t))
 
-def extract_place_query(text: str) -> str:
-    t = norm_text(text)
-    t = re.sub(r'^(donde queda|donde esta|a donde|adonde|ve a|vea|vete a|dirigete a|llevame a|dirigete|dir[ii]gete a|ir a|llevar a|lleva a)\s+', '', t)
-    m = re.search(r'(?:a|al|a la|en|en la|hacia|hasta)\s+(.+)', t)
-    return m.group(1).strip() if m else t
+def extract_place_query(t: str) -> str:
+    t = norm_text(t) 
+    t = re.sub(
+        r'^(?:d[oó]nde\s+(?:queda|est[aá])|a\s*d[oó]nde|ad[oó]nde|ve(?:te)?\s+a|'
+        r'dir[ií]gete\s+a|ll[ée]vame\s+a|lleva\s+a|ir\s+a|llevar\s+a|camina)(?:\s+a)?\s+',
+        '',t,flags=re.I
+    )
+    
+    m = re.search(
+        r'\b(?:a|al|a la|en|en la|hacia|hasta)\s+(?:el|la|los|las)?\s*(.+?)\s*$',t,flags=re.I
+    )
+    place = m.group(1).strip() if m else t.strip()
+    
+    place = re.compile(r'^(?:el|la|los|las)\s+', flags=re.I).sub('', place).strip(" .,:;!?\"'")
+    return place
 
 def _best_hit(res) -> Dict[str, Any]:
     if isinstance(res, list) and res:
@@ -43,9 +53,8 @@ def split_and_prioritize(text: str, kb) -> List[Dict[str, Any]]:
         # 1) Respuestas cortas por KB si hay alta confianza
         var = _best_hit(kb.loockup(c))
         if var.get('answer') and var.get('score', 0.0) >= 0.75:
-            accions.append(("corto", "rag", {"answer": var['answer'].strip()}))
+            accions.append(("corto", "rag", {"data": var['answer'].strip()}))
             continue
-
         # 2) Clasificación básica
         if is_battery(c):
             accions.append(("corto","battery",{}))
