@@ -20,7 +20,7 @@ def ensure_stt_model(model_name:str , model_url:str) -> str:
     model_dir = base_dir / model_name
     url = model_url
     if not model_dir.exists():
-        print(f"[STT_Model] Descargando modelo en {model_dir} ...", flush=True)
+        print(f"[LLM_model] Descargando modelo en {model_dir} ...", flush=True)
         urllib.request.urlretrieve(url, model_dir)
     return str(model_dir)
 

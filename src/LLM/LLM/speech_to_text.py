@@ -47,6 +47,7 @@ class SileroSTTNode(Node):
         if self.channels != 1:
             self.get_logger().warn(f"Silero espera audio mono; recibido {self.channels} canales. Publica mono en /audio.")
 
+
         # --- Carga del modelo (una sola vez) ---
         self.get_logger().info("Cargando Silero STT...")
         try:
@@ -62,20 +63,24 @@ class SileroSTTNode(Node):
 
         (read_batch, split_into_batches, read_audio, prepare_model_input) = utils
 
-         # see available models
-        models_yml = Path("models.yml")
+        base_dir = Path(__file__).resolve().parent
+        models_yml = base_dir / "models.yml"
         if not models_yml.exists():
-            torch.hub.download_url_to_file('https://raw.githubusercontent.com/snakers4/silero-models/master/models.yml', 'models.yml')
-        models = OmegaConf.load('models.yml')
+            torch.hub.download_url_to_file('https://raw.githubusercontent.com/snakers4/silero-models/master/models.yml', str(models_yml))
+        models = OmegaConf.load(str(models_yml))
+        lang = getattr(self, "language", "es")
         available_languages = list(models.stt_models.keys())
-        assert self.language in available_languages
+        if lang not in available_languages:
+            self.get_logger().warn(f"[Silero] Idioma '{lang}' no disponible en models.yml; usando 'en'")
+            lang = "es"
 
-        onnx_model_path = Path("model.onnx")
+        onnx_url = models.stt_models[lang].latest.onnx
+        onnx_model_path = base_dir / f"silero-stt-{lang}.onnx"
         if not onnx_model_path.exists():
-            torch.hub.download_url_to_file(models.stt_models.es.latest.onnx, 'model.onnx', progress=True)
-        onnx_model = onnx.load('model.onnx')
+            torch.hub.download_url_to_file(onnx_url, str(onnx_model_path), progress=True)
+        onnx_model = onnx.load(str(onnx_model_path))
         onnx.checker.check_model(onnx_model)
-        self.ort_session = onnxruntime.InferenceSession('model.onnx')
+        self.ort_session = onnxruntime.InferenceSession(onnx_model_path)
 
         self._ort_in_name = self.ort_session.get_inputs()[0].name 
 
@@ -111,6 +116,8 @@ class SileroSTTNode(Node):
             f"Silero listo 🔊 SR={self.rate}ch={self.channels} device={self.device} lang={self.language}\n"
             "Transcribe cuando /flag_wake_word cae de True a False."
         )
+        
+
 
     # -------------------- Callbacks --------------------
     def state_machine_function(self, msg: String) -> None:
