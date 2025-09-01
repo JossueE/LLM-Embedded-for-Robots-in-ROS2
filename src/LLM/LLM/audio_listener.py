@@ -10,13 +10,26 @@ class AudioListenerNode(Node):
     def __init__(self, node_name: str) -> None:
         super().__init__(node_name)
 
+        self.pa = pyaudio.PyAudio()
+        self.device_index_ = -1
+        
+        self.get_logger().info("Dispositivos de audio de entrada disponibles:")
+        # Lista dispositivos para elegir (solo una vez al inicio)
+        for i in range(self.pa.get_device_count()):
+            info = self.pa.get_device_info_by_index(i)
+            if info.get('maxInputChannels', 0) > 0:
+                self.get_logger().info(f"[{i}] {info['name']} (in={info['maxInputChannels']}, rate={int(info.get('defaultSampleRate',0))})")
+                if info['name'].lower() == "pulse":
+                    self.device_index_ = i
+                    self.get_logger().info(f"Usando dispositivo PulseAudio por defecto: {i}")
+
         self.declare_parameters(
             namespace="",
             parameters=[
                 ("channels", 1),
                 ("frames_per_buffer", 1000),  # ~62.5 ms a 16 kHz
                 ("rate", 16000),
-                ("device_index", 11),         
+                ("device_index", self.device_index_),         
             ],
         )
 
@@ -25,13 +38,6 @@ class AudioListenerNode(Node):
         self.rate_ = self.get_parameter("rate").value
         self.device_index_ = self.get_parameter("device_index").value
 
-        self.pa = pyaudio.PyAudio()
-
-        # Lista dispositivos para elegir (solo una vez al inicio)
-        for i in range(self.pa.get_device_count()):
-            info = self.pa.get_device_info_by_index(i)
-            if info.get('maxInputChannels', 0) > 0:
-                self.get_logger().info(f"[{i}] {info['name']} (in={info['maxInputChannels']}, rate={int(info.get('defaultSampleRate',0))})")
 
         # Opcional: valida soporte
         try:

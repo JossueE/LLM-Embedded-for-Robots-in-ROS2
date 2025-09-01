@@ -3,6 +3,7 @@ import threading
 from pathlib import Path
 from typing import Optional
 
+import time
 import onnx
 import onnxruntime
 import numpy as np
@@ -46,6 +47,7 @@ class SileroSTTNode(Node):
         if self.channels != 1:
             self.get_logger().warn(f"Silero espera audio mono; recibido {self.channels} canales. Publica mono en /audio.")
 
+
         # --- Carga del modelo (una sola vez) ---
         self.get_logger().info("Cargando Silero STT...")
         try:
@@ -53,7 +55,7 @@ class SileroSTTNode(Node):
                 repo_or_dir="snakers4/silero-models",
                 model="silero_stt",          # stt
                 language=self.language,      # depende del modelo disponible
-                device="cpu" if self.device not in ("gpu", "cpu") else self.device,
+                device="cpu" if self.device not in ("cuda", "cpu") else self.device,
             )
         except Exception as e:
             self.get_logger().error(f"No se pudo cargar Silero STT: {e}")
@@ -61,20 +63,24 @@ class SileroSTTNode(Node):
 
         (read_batch, split_into_batches, read_audio, prepare_model_input) = utils
 
-         # see available models
-        models_yml = Path("models.yml")
+        base_dir = Path(__file__).resolve().parent
+        models_yml = base_dir / "models.yml"
         if not models_yml.exists():
-            torch.hub.download_url_to_file('https://raw.githubusercontent.com/snakers4/silero-models/master/models.yml', 'models.yml')
-        models = OmegaConf.load('models.yml')
+            torch.hub.download_url_to_file('https://raw.githubusercontent.com/snakers4/silero-models/master/models.yml', str(models_yml))
+        models = OmegaConf.load(str(models_yml))
+        lang = getattr(self, "language", "es")
         available_languages = list(models.stt_models.keys())
-        assert self.language in available_languages
+        if lang not in available_languages:
+            self.get_logger().warn(f"[Silero] Idioma '{lang}' no disponible en models.yml; usando 'en'")
+            lang = "es"
 
-        onnx_model_path = Path("model.onnx")
+        onnx_url = models.stt_models[lang].latest.onnx
+        onnx_model_path = base_dir / f"silero-stt-{lang}.onnx"
         if not onnx_model_path.exists():
-            torch.hub.download_url_to_file(models.stt_models.es.latest.onnx, 'model.onnx', progress=True)
-        onnx_model = onnx.load('model.onnx')
+            torch.hub.download_url_to_file(onnx_url, str(onnx_model_path), progress=True)
+        onnx_model = onnx.load(str(onnx_model_path))
         onnx.checker.check_model(onnx_model)
-        self.ort_session = onnxruntime.InferenceSession('model.onnx')
+        self.ort_session = onnxruntime.InferenceSession(onnx_model_path)
 
         self._ort_in_name = self.ort_session.get_inputs()[0].name 
 
@@ -83,6 +89,7 @@ class SileroSTTNode(Node):
         self._prev_flag: bool = False
         self._buffer = bytearray()
         self._lock = threading.Lock()
+        self.state_machine_flag = ""
 
         # Worker para transcribir sin bloquear callbacks
         self._work_queue: list[bytes] = []
@@ -98,13 +105,23 @@ class SileroSTTNode(Node):
         self.flag_sub = self.create_subscription(
             Bool, "/flag_wake_word", self.flag_callback, 10, callback_group=cb_group
         )
-
-        self.get_logger().info(
-            f"Silero listo ✅ SR={self.rate}ch={self.channels} device={self.device} lang={self.language}\n"
-            "Transcribe cuando /flag_wake_word cae de True a False."
+        self.state_machine_sub = self.create_subscription(
+            String, "/state_machine_flag", self.state_machine_function, 10
         )
 
+        self.state_machine_publisher = self.create_publisher(
+            String, "/state_machine_flag", 10
+        )
+        self.get_logger().info(
+            f"Silero listo 🔊 SR={self.rate}ch={self.channels} device={self.device} lang={self.language}\n"
+            "Transcribe cuando /flag_wake_word cae de True a False."
+        )
+        
+
+
     # -------------------- Callbacks --------------------
+    def state_machine_function(self, msg: String) -> None:
+        self.state_machine_flag = msg.data
 
     def audio_callback(self, msg: Int16MultiArray) -> None:
         """Acumula frames Int16 mientras flag sea True."""
@@ -142,11 +159,16 @@ class SileroSTTNode(Node):
             try:
                 text = self._stt_from_bytes(chunk)
                 if text:
+                    self.state_machine_publisher.publish(String(data="main_active"))
+                    time.sleep(0.01)
                     self.pub_transcript.publish(String(data=text))
                     self.get_logger().info(f"📝 {text}")
                 else:
+                    self.state_machine_publisher.publish(String(data="wake_word"))
                     self.get_logger().info("📝 (vacío)")
+                
             except Exception as e:
+                self.state_machine_publisher.publish(String(data="wake_word"))
                 self.get_logger().error(f"Error en STT: {e}")
 
     # -------------------- STT core --------------------

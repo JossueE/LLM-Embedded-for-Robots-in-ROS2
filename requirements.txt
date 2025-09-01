@@ -7,6 +7,7 @@ launch_ros
 
 # LLM inference
 llama-cpp-python
+rapidfuzz
 
 # Audio capture / processing
 numpy

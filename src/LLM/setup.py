@@ -21,10 +21,12 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'agent = LLM.agent_node:main',
+            'llm_main = LLM.llm_main:main',
             'audio_listener = LLM.audio_listener:main',
+            'audio_publisher = LLM.audio_publisher:main',
             'wake_word = LLM.wake_word_detector:main',
             'stt = LLM.speech_to_text:main',
+            'tts = LLM.text_to_speech:main'
         ],
     },
 )

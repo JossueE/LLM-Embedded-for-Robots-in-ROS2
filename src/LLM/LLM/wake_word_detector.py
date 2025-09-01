@@ -11,10 +11,13 @@ import zipfile
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int16MultiArray, Bool
+from std_msgs.msg import Int16MultiArray, Bool, String
 import webrtcvad
 import vosk
 from rclpy.parameter import Parameter
+
+DEFAULT_MODEL_FILENAME = "vosk-model-small-es-0.42"
+DEFAULT_MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip"
 
 
 class WakeWordDetector(Node):
@@ -48,6 +51,16 @@ class WakeWordDetector(Node):
         self.audio_sub = self.create_subscription(
             Int16MultiArray, "/audio", self.audio_callback, 10
         )
+
+        self.state_machine_sub = self.create_subscription(
+            String, "/state_machine_flag", self.state_machine_function, 10
+        )
+
+        self.state_machine_publisher = self.create_publisher(
+            String, "/state_machine_flag", 10
+        )
+        self.state_machine_publisher.publish(String(data="wake_word"))
+
         self.flag_wake_word = self.create_publisher(Bool, "/flag_wake_word", 10)
         self.flag_wake_word.publish(Bool(data=False))
 
@@ -55,22 +68,25 @@ class WakeWordDetector(Node):
 
         self.listening = False
         self.listen_timer = None
+        self.state_machine_flag = ""
 
         # Debounce de parciales: p.ej. 2 aciertos seguidos
         self.partial_hits = 0
-        self.required_hits = 3
+        self.required_hits = 5
 
         # 10 ms → menor latencia (160 muestras a 16 kHz)
         self.frame_ms = 10
         self.frame_bytes = int(self.sample_rate / 1000 * self.frame_ms) * 2  # int16 mono
 
-    def ensure_vosk_model(self) -> None:
-        base_dir = Path(__file__).resolve().parent
-        model_dir = base_dir / "vosk-model-small-es-0.42"
-        url = "https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip"
+    def state_machine_function(self, msg: String) -> None:
+        self.state_machine_flag = msg.data
 
+    def ensure_vosk_model(self) -> str:
+        base_dir = Path(__file__).resolve().parent
+        model_dir = base_dir / DEFAULT_MODEL_FILENAME
+        url = DEFAULT_MODEL_URL
         if not model_dir.exists():
-            zip_path = base_dir / "vosk-model-small-es-0.42.zip"
+            zip_path = base_dir / f"{DEFAULT_MODEL_FILENAME}.zip"
             self.get_logger().info(f"[VOSK] Descargando modelo en {zip_path} ...")
             urllib.request.urlretrieve(url, zip_path)
 
@@ -94,47 +110,48 @@ class WakeWordDetector(Node):
         return False
 
     def audio_callback(self, msg: Int16MultiArray) -> None:
-        # bytes de audio
-        audio_bytes = np.array(msg.data, dtype=np.int16).tobytes()
+        if self.state_machine_flag == "wake_word":
+            # bytes de audio
+            audio_bytes = np.array(msg.data, dtype=np.int16).tobytes()
 
-        # Procesa en frames cortos de 10 ms
-        fb = self.frame_bytes
-        for i in range(0, len(audio_bytes) - fb + 1, fb):
-            frame = audio_bytes[i : i + fb]
+            # Procesa en frames cortos de 10 ms
+            fb = self.frame_bytes
+            for i in range(0, len(audio_bytes) - fb + 1, fb):
+                frame = audio_bytes[i : i + fb]
 
-            # Gate de VAD: si no parece voz, resetea hits y sigue
-            if not self.vad.is_speech(frame, self.sample_rate):
-                self.partial_hits = 0
-                # IMPORTANTE: aún así alimentamos al recognizer para el timing interno
-                self.rec.AcceptWaveform(frame)
-                continue
-
-            # Alimenta el recognizer
-            # 1) Si Vosk cree que hay “cierre” de palabra/frase
-            if self.rec.AcceptWaveform(frame):
-                result = json.loads(self.rec.Result())
-                text = result.get("text", "").lower().strip()
-                if text and self.matches_wake(text):
-                    self.get_logger().info(f"[FULL] Wake word: {text!r}")
-                    self.activate_whisper()
+                # Gate de VAD: si no parece voz, resetea hits y sigue
+                if not self.vad.is_speech(frame, self.sample_rate):
                     self.partial_hits = 0
-                    return
-                # Si el full no trae, cae a parciales de nuevo
-                self.partial_hits = 0
-            else:
-                # 2) Parcial de bajísima latencia
-                partial = json.loads(self.rec.PartialResult()).get("partial", "").lower().strip()
-                if partial:
-                    if self.matches_wake(partial):
-                        self.partial_hits += 1
-                        if self.partial_hits >= self.required_hits:
-                            self.get_logger().info(f"[PARTIAL] Wake word: {partial!r}")
-                            self.activate_whisper()
-                            self.partial_hits = 0
-                            return
-                    else:
-                        # si el parcial no contiene la clave, resetea el contador
+                    # IMPORTANTE: aún así alimentamos al recognizer para el timing interno
+                    self.rec.AcceptWaveform(frame)
+                    continue
+
+                # Alimenta el recognizer
+                # 1) Si Vosk cree que hay “cierre” de palabra/frase
+                if self.rec.AcceptWaveform(frame):
+                    result = json.loads(self.rec.Result())
+                    text = result.get("text", "").lower().strip()
+                    if text and self.matches_wake(text):
+                        self.get_logger().info(f"[FULL] Wake word: {text!r}")
+                        self.activate_whisper()
                         self.partial_hits = 0
+                        return
+                    # Si el full no trae, cae a parciales de nuevo
+                    self.partial_hits = 0
+                else:
+                    # 2) Parcial de bajísima latencia
+                    partial = json.loads(self.rec.PartialResult()).get("partial", "").lower().strip()
+                    if partial:
+                        if self.matches_wake(partial):
+                            self.partial_hits += 1
+                            if self.partial_hits >= self.required_hits:
+                                self.get_logger().info(f"[PARTIAL] Wake word: {partial!r}")
+                                self.activate_whisper()
+                                self.partial_hits = 0
+                                return
+                        else:
+                            # si el parcial no contiene la clave, resetea el contador
+                            self.partial_hits = 0
 
     def activate_whisper(self) -> None:
         if self.listening:
@@ -150,6 +167,7 @@ class WakeWordDetector(Node):
             self.listen_timer.cancel()
             self.listen_timer = None
         self.flag_wake_word.publish(Bool(data=False))
+        self.state_machine_publisher.publish(String(data="speech_to_text"))
         self.listening = False
 
     def _set_inference_active(self, value: bool) -> None:
