@@ -17,8 +17,11 @@ vosk
 
 # Speech-to-text
 torch
+pyyaml
+typeguard
 onnx
 onnxruntime
+torchaudio
 omegaconf
 
 # Testing tools

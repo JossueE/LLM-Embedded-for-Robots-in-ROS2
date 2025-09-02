@@ -74,17 +74,15 @@ and
 [tts-6] [INFO] [1756768229.614419483] [silero_tts_node]: Silero TTS listo 🔊 rate=24000 device=cpu lang=es speaker=v3_es
 ```
 
-### Ask a question from a terminal
+### Test just a Node
 You could use the follow example or try to speak in the microphone
 ```bash
-# Publish a question to the LLM agent
-$ ros2 topic pub /octopy/ask std_msgs/msg/String "{data: 'What is the battery level?'}"
+# Run the LLM agent Node
+$ home/<your user>/LLM-Embedded-for-Robots-in-ROS2/.venv/bin/python3 /home/<your user>/LLM-Embedded-for-Robots-in-ROS2/install/LLM/lib/LLM/llm_main
 ```
 > [!TIP]
-> The agent answers on `/octopy/answer`.
+> By this way you are sure that you call your virtual env
 
-### Full Audio Pipeline
-```
 Mic → Wake Word → STT → LLM/Tools → TTS → Speaker
 ```
 

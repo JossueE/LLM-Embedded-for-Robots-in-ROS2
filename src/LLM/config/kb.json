@@ -4,7 +4,8 @@
         "triggers": [
           "cómo|no te llamas",
           "cuál es tu nombre",
-          "tienes apellido"
+          "tienes apellido",
+          "su nombre es"
         ],
         "answer": "Mi nombre es Octybot"
       },

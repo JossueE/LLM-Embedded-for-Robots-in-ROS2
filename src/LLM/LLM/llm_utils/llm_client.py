@@ -12,8 +12,7 @@ try:
     from llama_cpp import Llama
 except Exception as e:
     raise RuntimeError(
-        f"No se pudo importar llama_cpp. Activa venv o instala llama-cpp-python. Detalle: {e}"
-    )
+        f"No se pudo importar llama_cpp. Activa venv o instala llama-cpp-python. Detalle: {e}")
 
 def ensure_stt_model(model_name:str , model_url:str) -> str:
     base_dir = Path(__file__).resolve().parent

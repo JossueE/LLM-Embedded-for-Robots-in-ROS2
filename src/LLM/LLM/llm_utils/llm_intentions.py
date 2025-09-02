@@ -2,9 +2,22 @@ import re
 import unicodedata
 from typing import List, Dict, Any
 
+COURTESY_RE = re.compile(
+    r"\b(?:"
+    r"por\s+favor|porfa(?:vor|s)?|porfis|"
+    r"gracias(?:\s+de\s+antemano)?|muchas\s+gracias|please|"
+    r"disculp(?:a|ame)|perdon(?:ame)?|"
+    r"hola|buen(?:os|as)\s+(?:dias|tardes|noches)|"
+    r"me\s+puedes\s+decir|me\s+podrias\s+decir|puedes\s+decirme|podrias\s+decirme|"
+    r"puedes|podrias|"
+    r"dime|cuentame|indica(?:me)?"
+    r")\b"
+)
+
 def norm_text(s: str) -> str:
     s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("ascii")
     s = re.sub(r'[^a-z0-9 ]+',' ', s.lower())
+    s = COURTESY_RE.sub(' ', s)
     return re.sub(r'\s+',' ', s).strip()
 
 def is_battery(t: str) -> bool:
@@ -17,7 +30,7 @@ def is_pose(t: str) -> bool:
 
 def is_nav(t: str) -> bool:
     t = norm_text(t)
-    return bool(re.search(r"\b(ve a|ve|gira|giera|ir|orientate|vete|avanza|dirigete|dir[ii]gete|camina|lleva|ir|hacia|hasta|a donde|adonde|vea|donde|queda|ubicacion|orienta|apunta|se[nn]ala)\b", t))
+    return bool(re.search(r"\b(ve a|ve|gira|giera|ir|orientate|vete|avanza|dirigete|dir[ii]gete|camina|lleva|ir|hacia|hasta|a donde|adonde|vea|donde|queda|ubicacion|orienta|apunta|se[nn]ala|dondede)\b", t))
 
 def extract_place_query(t: str) -> str:
     t = norm_text(t) 
