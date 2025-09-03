@@ -70,39 +70,64 @@ Run the example launch file to start the wake-word → STT → LLM → TTS pipel
 ```bash
 ros2 launch LLM LLM.launch.py
 ```
-The fisrt time, the models will be donwloaded, so it could take a little bit. Don't say anithing until you see.
+The fisrt time, the models will be donwloaded, so it could take a little bit. Don't say anithing until you see and don't stop the process.
+
 ```bash
 [llm_main-4] [INFO] [xxxxxxxxxx.xxxxxxxxx] [octopy_agent]: Octopy listo ✅  Publica en /transcript
 ```
 and
 ```bash
+
 [stt-3] [INFO] [xxxxxxxxxx.xxxxxxxxxx] [silero_stt_node]: Silero listo 🔊 SR=16000ch=1 device=cpu lang=es
 [stt-3] Transcribe cuando /flag_wake_word cae de True a False.
 
-[tts-6] [INFO] [1756768229.614419483] [silero_tts_node]: Silero TTS listo 🔊 rate=24000 device=cpu lang=es speaker=v3_es
+[tts-6] [INFO] [xxxxxxxxxx.xxxxxxxxxx] [silero_tts_node]: Silero TTS listo 🔊 rate=24000 device=cpu lang=es speaker=v3_es
+
+[python-2] [INFO] [xxxxxxxxxx.xxxxxxxxxx] [audio_sink]: AudioSink ▶️ rate=24000 Hz, ch=1, fpb=256, device_index=None
+
 ```
 
 ### Test just a Node
 You could use the follow example or try to speak in the microphone
+> [!TIP]
+> By this way you are sure that you call your virtual env
+
 ```bash
 # Run the LLM agent Node
 home/<your user>/LLM-Embedded-for-Robots-in-ROS2/.venv/bin/python3 /home/<your user>/LLM-Embedded-for-Robots-in-ROS2/install/LLM/lib/LLM/llm_main
 ```
-> [!TIP]
-> By this way you are sure that you call your virtual env
 
 Mic → Wake Word → STT → LLM/Tools → TTS → Speaker
+
+## ⚙️ Configuration
+> [!WARNING]
+> LLMs and audio models can be large. Ensure you have enough **disk space** and **RAM/VRAM** for your chosen settings.
+
+All runtime settings live in **`config/config.py`**. They are plain Python constants—edit the file and restart your nodes to apply changes.
+
+> [!TIP]
+> If you build with `colcon build --symlink-install`, Python edits are picked up without rebuilding. Otherwise, rebuild and `source install/setup.bash`.
+
+### Importing settings in your code
+```python
+# if you re-export in config/__init__.py
+from .config import AUDIO_LISTENER_SAMPLE_RATE, DEFAULT_MODEL_FILENAME
+
+# otherwise
+from .llm_utils.config  import AUDIO_LISTENER_SAMPLE_RATE, DEFAULT_MODEL_FILENAME
+
 ```
 
 ## 📂 Project Structure
 ```text
 LLM-Embedded-for-Robots-in-ROS2/
 ├── src/
-|   ├──config
+|   ├──data
 |   |  ├──kb.json
 |   |  └── poses.json
 │   └── LLM/                 # ROS2 package: agent, STT, wake word, TTS
 │       ├──llm_utils
+│       │  ├──data.py 
 │       │  ├──llm_client.py 
 │       │  ├──llm_intentions.py 
 │       │  ├──llm_router.py 
@@ -125,16 +150,6 @@ LLM-Embedded-for-Robots-in-ROS2/
 - `/battery_state` – battery feedback for tools
 - `/amcl_pose` – pose feedback for tools
 
-## ⚙️ Configuration
-> [!WARNING]
-> Large models require significant disk space; check `models.yml` for sizes.
-
-### Performance
-```bash
-# Limit CPU threads used by llama.cpp
-export OCTOPY_THREADS=4
-```
-Other optional variables: `OCTOPY_CTX`, `OCTOPY_N_BATCH`, `OCTOPY_N_GPU_LAYERS`.
 
 ## 🤝 Contributing
 Contributions are welcome! Please fork the repository and submit a pull request. For major changes, open an issue first to discuss what you would like to change.
