@@ -241,7 +241,14 @@
           "Haz reset de sensores"
         ],
         "answer": "Desconecta y vuelve a conectar los sensores o usa el comando 'reset_sensors' en la terminal."
+      },
+      {
+        "triggers": [
+          "quién te creó"
+        ],
+        "answer": "Jossue, el ingeniero chido"
       }
     ]
   }
+  
   

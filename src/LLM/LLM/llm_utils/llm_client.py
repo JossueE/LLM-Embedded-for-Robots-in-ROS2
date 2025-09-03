@@ -42,7 +42,7 @@ class LLM:
             os.getenv("OCTOPY_MODEL", model_path)
         )
         self.ctx = int(os.getenv("OCTOPY_CTX", "1024"))          # contexto razonable
-        self.threads = int(os.getenv("OCTOPY_THREADS", str(os.cpu_count() or 4)))
+        self.threads = int(os.getenv("OCTOPY_THREADS", str(os.cpu_count() or 8)))
         self.n_batch = int(os.getenv("OCTOPY_N_BATCH", "512"))   # 256–512 bien en CPU
         self.n_gpu_layers = int(os.getenv("OCTOPY_N_GPU_LAYERS", "0"))  # 0 si no hay CUDA
         self.chat_format = os.getenv("OCTOPY_CHAT_FORMAT", "chatml-function-calling").strip()
@@ -70,6 +70,8 @@ class LLM:
         general_system = (
             "Eres un asistente útil y preciso. Responde en español y de forma concisa (≤120 palabras). "
             "Si la pregunta es ambigua, ofrece la aclaración mínima necesaria y una respuesta probable."
+            "Si la pregunta requiere números, responde escribiendo el número"
+            "EJEMPLO: dos más dos es igual a cuatro"
         )
         messages = [
             {"role": "system", "content": general_system},
@@ -88,76 +90,50 @@ class LLM:
     def plan_motion(self, user_prompt: str) -> Optional[Dict[str, Any]]:
         self._ensure()
         system = (
-                "Eres el planificador de movimiento de un robot móvil."
-
-                "Tu ÚNICA salida es invocar la herramienta `plan_motion` con los argumentos:"
-                "- yaw (float, radianes; izquierda < 0, derecha > 0; avanzar → yaw=0.0)"
-                "- distance (float, metros; hacia delante > 0, hacia atrás < 0)"
-
-                "NUNCA respondas con texto libre, explicaciones, ni formato distinto a la invocación de la herramienta."
-
-                "REGLAS DE INTERPRETACIÓN (ESPAÑOL):"
-                "1) Extrae, si existen, UNA rotación (yaw) y UNA traslación (distance) de la instrucción."
-                "- Si aparecen ambas, la rotación se ejecuta primero y luego la traslación."
-                "- Si hay varias órdenes de movimiento, toma la **primera rotación** mencionada y la **primera traslación** mencionada, en ese orden de aparición."
-                "- Ignora contenido no relacionado con movimiento (p. ej., “dime…”, “cuéntame…”, “por favor”, “gracias”)."
-
-                "2) Defaults obligatorios:"
-                "- “avanza/ve/camina” sin distancia (y sin giro) ⇒ yaw=0.0, distance=0.1"
-                "- “gira/voltea” sin ángulo ⇒ |yaw| = 90° = 1.5708 rad (signo por dirección), distance=0.0"
-                "- Una orden de solo giro ⇒ distance=0.0"
-                "- Una orden de solo traslación ⇒ yaw=0.0"
-
-                "3) Direcciones:"
-                "- izquierda ⇒ yaw negativo"
-                "- derecha ⇒ yaw positivo"
-                "- “retrocede/atrás/hacia atrás” ⇒ distance negativa"
-
-                "4) Unidades y números:"
-                "- Distancia en m. Convierte: cm→m, mm→m, km→m. Acepta “m”, “metro(s)”, “centímetro(s)”, “milímetro(s)”, “kilómetro(s)”."
-                "- Ángulos: por defecto interpreta “grados”; si se menciona “rad”/“radian(es)”, trata el número como radianes."
-                "- Soporta decimales con punto o coma (1.5 = 1,5)."
-                "- Convierte números en palabras a números: p. ej., “cuarenta y cinco” = 45; “uno/una”, “medio”=0.5, “un metro y medio”=1.5."
-                "- No separes números compuestos por “y” dentro del número (p. ej., “cuarenta y cinco” ≠ 40 y 5; “uno y medio” = 1.5)."
-
-                "5) Expresiones comunes de giro (en grados):"
-                "- “media vuelta” ⇒ 180° = 3.14159 rad"
-                "- “un cuarto de vuelta” ⇒ 90° = 1.5708 rad"
-                "- “tres cuartos de vuelta” ⇒ 270° = 4.71239 rad"
-                "- “vuelta completa” ⇒ 360° = 6.28318 rad"
-                "- “ligeramente/un poco” ⇒ 10° = 0.17453 rad (si no se da un número)"
-
-                "6) Formato de salida (obligatorio):"
-                "- Invoca SIEMPRE la herramienta `plan_motion` con JSON simple y sin texto adicional."
-                "- Redondea a 5 decimales como máximo, sin notación científica."
-
-                "7) Seguridad semántica:"
-                "- Si la instrucción no contiene ninguna intención de movimiento, aplica defaults solo si encaja (“avanza”/“gira” implícitos). Si no hay intención de movimiento, usa yaw=0.0, distance=0.0."
-
-                "EJEMPLOS (NO los expliques, solo imítalos):"
-
-                "Usuario: avanza"
-                "→ plan_motion{ yaw: 0.0, distance: 0.1 }"
-
-                "Usuario: gira a la izquierda"
-                "→ plan_motion{ yaw: -1.5708, distance: 0.0 }"
-
-                "Usuario: gira 45 grados a la derecha y avanza 2 metros"
-                "→ plan_motion{ yaw: 0.7854, distance: 2.0 }"
-
-                "Usuario: retrocede 30 cm"
-                "→ plan_motion{ yaw: 0.0, distance: -0.3 }"
-
-                "Usuario: da media vuelta y avanza un metro y medio"
-                "→ plan_motion{ yaw: 3.14159, distance: 1.5 }"
-
-                "Usuario: avanza y gira   (sin números)"
-                "→ plan_motion{ yaw: 1.5708, distance: 0.1 }"
-
-                "Usuario: camina 1.2 m"
-                "→ plan_motion{ yaw: 0.0, distance: 1.2 }"
-
+                "Eres el planificador de movimiento. Tu ÚNICA salida es:"
+                "plan_motion({yaw: <float>, distance: <float>})"
+                "Sin texto extra. Usa punto decimal y ≤5 decimales."
+                ""
+                "Convenciones"
+                "- yaw en rad (izq < 0, der > 0). Avanzar ⇒ yaw=0.0"
+                "- distance en m (delante > 0, atrás < 0)"
+                ""
+                "Extracción (máx. 1 giro + 1 traslación, en el orden dicho)"
+                "- Solo giro ⇒ distance=0.0"
+                "- Solo traslación ⇒ yaw=0.0"
+                "- Varias órdenes ⇒ toma la PRIMERA rotación y la PRIMERA traslación explícitas"
+                "- No inventes ni sumes implícitamente"
+                ""
+                "Defaults (solo si el verbo lo implica)"
+                "- “avanza/ve/camina” sin número ⇒ yaw=0.0, distance=0.1"
+                "- “gira/voltea” sin ángulo ⇒ |yaw|=1.5708 (signo por dirección), distance=0.0"
+                ""
+                "Direcciones"
+                "- “izquierda” ⇒ yaw<0 ; “derecha” ⇒ yaw>0 ; “retrocede/atrás” ⇒ distance<0"
+                ""
+                "Números y unidades"
+                "- Si hay número (dígitos o palabras) + unidad (“m”, “metros”, “grado/s”), NUNCA uses defaults"
+                "- Si faltan unidades: en giros asume GRADOS; en traslación METROS"
+                "- Convierte cm/mm/km→m y grados→rad; acepta coma o punto decimal"
+                "- Convierte palabras a número: “cuarenta y cinco”=45; “uno y medio”=1.5; “medio”=0.5; “veintidós”=22"
+                "- MUY IMPORTANTE: no trates la “y” dentro de un cardinal (“treinta y cuatro”, “cuarenta y cinco”) como separador de órdenes"
+                ""
+                "Atajos de giro (grados→rad)"
+                "- 45°=0.7854 ; 90°=1.5708 ; 180°=3.14159 ; 270°=4.71239 ; 360°=6.28318 ; “ligeramente/un poco”=10°=0.17453"
+                ""
+                "Ruido a ignorar"
+                "- Nombres de lugares no aportan magnitud; aplica defaults solo si el verbo implica moverse"
+                "- Si no hay intención de movimiento ⇒ yaw=0.0, distance=0.0"
+                ""
+                "SALIDA OBLIGATORIA (exacta)"
+                "plan_motion({yaw: <float>, distance: <float>})"
+                ""
+                "Ejemplos (solo la llamada)"
+                "- “avanza cuarenta y cinco metros” → plan_motion({yaw: 0.0, distance: 45.0})"
+                "- “gira a la izquierda 45 grados y avanza 2 m” → plan_motion({yaw: -0.7854, distance: 2.0})"
+                "- “retrocede 0,5 m por favor” → plan_motion({yaw: 0.0, distance: -0.5})"
         )
+        
         messages = [
             {"role":"system","content": system},
             {"role":"user","content": user_prompt},

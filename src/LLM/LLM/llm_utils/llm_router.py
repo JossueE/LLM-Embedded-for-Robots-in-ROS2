@@ -6,6 +6,8 @@ from threading import Thread
 from rclpy.logging import get_logger
 from .llm_intentions import is_battery, is_pose, is_nav, split_and_prioritize
 
+MAX_DISTANCE_LLM_MOVE = 10.0
+
 class Router:
     def __init__(self, kb, poses, llm, tool_get_batt, tool_get_pose, tool_nav):
         self.kb = kb
@@ -52,7 +54,7 @@ class Router:
 
 def _clamp_motion(yaw: float, dist: float,
     max_abs_yaw: float = 2*math.pi,
-    max_dist_m: float = 10.0) -> tuple[float, float]:
+    max_dist_m: float = MAX_DISTANCE_LLM_MOVE) -> tuple[float, float]:
     # límites duros para evitar órdenes absurdas
     y = max(-max_abs_yaw, min(max_abs_yaw, float(yaw)))
     d = max(0.0, min(max_dist_m, float(dist)))

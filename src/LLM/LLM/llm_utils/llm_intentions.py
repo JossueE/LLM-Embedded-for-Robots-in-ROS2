@@ -14,6 +14,48 @@ COURTESY_RE = re.compile(
     r")\b"
 )
 
+MOV_VERB_RE = re.compile(r"""
+(?ix)                          # i: ignorecase, x: verbose
+\b(?: 
+    # ir / ve
+    ve(?:\s+a)? | vete | vayan | vamos | vamonos | ir(?:se)? |
+    # desplazamiento basico
+    anda(?:r)? | camina(?:r)? | marcha(?:r)? | pasa(?:r)? | cruza(?:r)? |
+    # avanzar / retroceder
+    a[bv]anza(?:r)? | avanz[ao]? | abanza | retrocede(?:r)? | regresa(?:r)? | vuelve(?:r)? |
+    # mover / desplazar
+    mueve(?:te)? | mover(?:se)? | desplaza(?:te|r)? |
+    # dirigir / orientar / apuntar
+    dirigete | dirijete | dirigir(?:se)? | encaminate | encaminar(?:se)? |
+    orienta(?:r|rte|rse)? | apunta(?:r)? |
+    # giro
+    gira(?:r)? | gier[a]? | gir\b | voltea(?:r)? | dobla(?:r)? |
+    # ubicar / senalar
+    se+n+ala(?:r)? | senala(?:r)? | ubica(?:te|r)? | localiza(?:r)? |
+    # destino / rumbo / preps direccionales
+    rumbo(?:\s+a)? | hasta | hacia | a\s*donde | adonde | donde(?:\s+queda)? | dondede
+)\b
+""")
+
+_SPLIT_RE = re.compile(r"""
+(?xi)
+\b(?: 
+    luego | despues | entonces
+  | y(?=\s+(?:por\s+favor\s+)?(?: 
+        ve(?:\s+a)? | vete | vayan | vamos | vamonos | ir(?:se)?
+      | anda(?:r)? | camina(?:r)? | marcha(?:r)? | pasa(?:r)? | cruza(?:r)?
+      | a[bv]anza(?:r)? | avanz[ao]? | abanza
+      | retrocede(?:r)? | regresa(?:r)? | vuelve(?:r)?
+      | mueve(?:te)? | mover(?:se)? | desplaza(?:te|r)?
+      | dirigete | dirijete | dirigir(?:se)? | encaminate | encaminar(?:se)?
+      | orienta(?:r|rte|rse)? | apunta(?:r)?
+      | gira(?:r)? | gier[a]? | gir\b | voltea(?:r)? | dobla(?:r)?
+      | se+n+ala(?:r)? | senala(?:r)? | ubica(?:te|r)? | localiza(?:r)?
+      | rumbo(?:\s+a)? | hasta | hacia | a\s*donde | adonde | donde(?:\s+queda)? | dondede
+    )\b)
+)\b
+""")
+
 def norm_text(s: str) -> str:
     s = unicodedata.normalize('NFD', s).encode('ascii', 'ignore').decode("ascii")
     s = re.sub(r'[^a-z0-9 ]+',' ', s.lower())
@@ -30,7 +72,7 @@ def is_pose(t: str) -> bool:
 
 def is_nav(t: str) -> bool:
     t = norm_text(t)
-    return bool(re.search(r"\b(ve a|ve|gira|giera|ir|orientate|vete|avanza|dirigete|dir[ii]gete|camina|lleva|ir|hacia|hasta|a donde|adonde|vea|donde|queda|ubicacion|orienta|apunta|se[nn]ala|dondede|gir|abanza)\b", t))
+    return bool(MOV_VERB_RE.search(t))
 
 def extract_place_query(t: str) -> str:
     t = norm_text(t) 
@@ -58,8 +100,9 @@ def split_and_prioritize(text: str, kb) -> List[Dict[str, Any]]:
     kb: instancia con método loockup(str) -> dict o list[dict]
     """
     t = norm_text(text)
-    parts = re.split(r"\b(y|luego|despues|después|entonces)\b", t)
-    clauses = [p.strip() for p in parts if p and p.strip() not in {"y","luego","despues","después","entonces"}]
+
+    parts = _SPLIT_RE.split(t)
+    clauses = [p.strip() for p in parts if p and p.strip() not in {"y","luego","despues","entonces"}]
 
     accions = []
     for c in clauses:
