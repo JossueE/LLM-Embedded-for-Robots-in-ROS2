@@ -36,7 +36,8 @@
 
 ### Setup
 ```bash
-$ sudo dnf install portaudio-devel python3-devel
+$ sudo apt update
+$ sudo apt install -y python3-dev python3-venv build-essential portaudio19-dev
 ```
 
 ```bash

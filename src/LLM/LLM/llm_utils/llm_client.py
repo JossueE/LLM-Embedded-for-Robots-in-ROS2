@@ -154,9 +154,6 @@ class LLM:
                 "Usuario: avanza y gira   (sin números)"
                 "→ plan_motion{ yaw: 1.5708, distance: 0.1 }"
 
-                "Usuario: gira 1,57 rad a la derecha"
-                "→ plan_motion{ yaw: 1.57, distance: 0.0 }"
-
                 "Usuario: camina 1.2 m"
                 "→ plan_motion{ yaw: 0.0, distance: 1.2 }"
 
