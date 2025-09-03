@@ -36,36 +36,39 @@
 
 ### Setup
 ```bash
-$ sudo apt update
-$ sudo apt install -y python3-dev python3-venv build-essential portaudio19-dev
+sudo apt update
+sudo apt install -y python3-dev python3-venv build-essential portaudio19-dev
 ```
 
 ```bash
 # Clone the repository
-$ git clone https://github.com/JossueE/LLM-Embedded-for-Robots-in-ROS2.git
-$ cd LLM-Embedded-for-Robots-in-ROS2
+git clone https://github.com/JossueE/LLM-Embedded-for-Robots-in-ROS2.git
+cd LLM-Embedded-for-Robots-in-ROS2
 ```
 ```bash
 # Create a virtual environment
-$ python3 -m venv .venv
-$ source .venv/bin/activate
-$ python -m pip install -U pip
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -U pip
+
+> [!TIP]
+> Whit (.venv) Active
 ```
 ```bash
 # Install dependencies
-(.venv) $ pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 ```bash
 # Build ROS2 packages
-(.venv) $ colcon build
-(.venv) $ source install/setup.bash
+colcon build
+source install/setup.bash
 ```
 ---
 
 ## ⚡ Quick Start
 Run the example launch file to start the wake-word → STT → LLM → TTS pipeline:
 ```bash
-(.venv) $ ros2 launch LLM LLM.launch.py
+ros2 launch LLM LLM.launch.py
 ```
 The fisrt time, the models will be donwloaded, so it could take a little bit. Don't say anithing until you see.
 ```bash
@@ -83,7 +86,7 @@ and
 You could use the follow example or try to speak in the microphone
 ```bash
 # Run the LLM agent Node
-$ home/<your user>/LLM-Embedded-for-Robots-in-ROS2/.venv/bin/python3 /home/<your user>/LLM-Embedded-for-Robots-in-ROS2/install/LLM/lib/LLM/llm_main
+home/<your user>/LLM-Embedded-for-Robots-in-ROS2/.venv/bin/python3 /home/<your user>/LLM-Embedded-for-Robots-in-ROS2/install/LLM/lib/LLM/llm_main
 ```
 > [!TIP]
 > By this way you are sure that you call your virtual env
@@ -129,7 +132,7 @@ LLM-Embedded-for-Robots-in-ROS2/
 ### Performance
 ```bash
 # Limit CPU threads used by llama.cpp
-$ export OCTOPY_THREADS=4
+export OCTOPY_THREADS=4
 ```
 Other optional variables: `OCTOPY_CTX`, `OCTOPY_N_BATCH`, `OCTOPY_N_GPU_LAYERS`.
 
