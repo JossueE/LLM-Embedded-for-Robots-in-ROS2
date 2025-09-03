@@ -1,10 +1,5 @@
 # Runtime dependencies for LLM Embedded for Robots in ROS2
 
-# ROS2 Python client and launch utilities
-rclpy
-launch
-launch_ros
-
 # LLM inference
 llama-cpp-python
 rapidfuzz

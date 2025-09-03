@@ -12,16 +12,16 @@
 ## 📚 Table of Contents
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Configuration](#configuration)
 - [Project Structure](#project-structure)
 - [Usage](#usage)
-- [Configuration](#configuration)
 - [Contributing](#contributing) 
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
 
 ---
 
-## 🛠️ Installation
+<h2 id="installation">🛠️ Installation</h2>
 > [!IMPORTANT]
 > Ensure ROS2 Humble and Python ≥3.10 are installed before continuing.
 
@@ -65,7 +65,7 @@ source install/setup.bash
 ```
 ---
 
-## ⚡ Quick Start
+<h2 id="quick-start">⚡ Quick Start</h2>
 Run the example launch file to start the wake-word → STT → LLM → TTS pipeline:
 ```bash
 ros2 launch LLM LLM.launch.py
@@ -99,7 +99,7 @@ home/<your user>/LLM-Embedded-for-Robots-in-ROS2/.venv/bin/python3 /home/<your u
 
 Mic → Wake Word → STT → LLM/Tools → TTS → Speaker
 
-## ⚙️ Configuration
+<h2 id="configuration">⚙️ Configuration</h2>
 > [!WARNING]
 > LLMs and audio models can be large. Ensure you have enough **disk space** and **RAM/VRAM** for your chosen settings.
 
@@ -117,8 +117,8 @@ from .config import AUDIO_LISTENER_SAMPLE_RATE, DEFAULT_MODEL_FILENAME
 from .llm_utils.config  import AUDIO_LISTENER_SAMPLE_RATE, DEFAULT_MODEL_FILENAME
 
 ```
+<h2 id="Project Structure">📂 Project Structure</h2>
 
-## 📂 Project Structure
 ```text
 LLM-Embedded-for-Robots-in-ROS2/
 ├── src/
@@ -132,15 +132,17 @@ LLM-Embedded-for-Robots-in-ROS2/
 │       │  ├──llm_intentions.py 
 │       │  ├──llm_router.py 
 │       │  └──llm_tools.py 
+│       ├──audio_publisher.py 
 │       ├──audio_listener.py 
 │       ├──llm_main.py 
 │       ├──speech_to_text.py 
-│       └──wake_word_detector
+│       ├──text_to_speech.py 
+│       └──wake_word_detector.py
 ├── models.yml               # Auto-downloaded model list
 ├── requirements.txt
 └── README.md
 ```
-## 🧪 Usage
+<h2 id="usage">🧪 Usage</h2>
 ### ROS Topics
 - `/audio` – raw audio input
 - `/flag_wake_word` – wake word detection flag
@@ -150,18 +152,17 @@ LLM-Embedded-for-Robots-in-ROS2/
 - `/battery_state` – battery feedback for tools
 - `/amcl_pose` – pose feedback for tools
 
-
-## 🤝 Contributing
+<h2 id="contributing">🤝 Contributing</h2>
 Contributions are welcome! Please fork the repository and submit a pull request. For major changes, open an issue first to discuss what you would like to change.
 
 ---
 
-## 📄 License   
+<h2 id="license">📄 License</h2>
 This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-## 🙏 Acknowledgements
+<h2 id="acknowledgements">🙏 Acknowledgements</h2>
 - [llama.cpp](https://github.com/ggerganov/llama.cpp)
 - [Vosk](https://alphacephei.com/vosk/)
 - [Silero Models](https://github.com/snakers4/silero-models)
