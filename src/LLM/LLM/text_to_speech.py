@@ -10,7 +10,11 @@ from rclpy.node import Node
 from std_msgs.msg import Int16MultiArray, MultiArrayDimension, String
 from rclpy.callback_groups import ReentrantCallbackGroup
 
+from .llm_utils.config import LANGUAGE, SAMPLE_RATE_TTS, DEVICE_SELECTOR_TTS, SPEAKER_TTS, VOICE_TTS
+
 cb_group = ReentrantCallbackGroup()
+
+
 
 class SileroTTSNode(Node):
     def __init__(self) -> None:
@@ -18,11 +22,11 @@ class SileroTTSNode(Node):
 
         # --- Parámetros ---
         # 48k suena mejor; ajusta si tu reproductor solo soporta 16k/22.05k/24k/48k
-        self.declare_parameter("rate", 24000)
-        self.declare_parameter("device", "cpu")            # "cpu" o "cuda"
-        self.declare_parameter("language", "es")           # "es"
-        self.declare_parameter("speaker", "v3_es")    
-        self.declare_parameter("voice", "es_2")            #voices are: es_0, es_1, es_2
+        self.declare_parameter("rate", SAMPLE_RATE_TTS)
+        self.declare_parameter("device", DEVICE_SELECTOR_TTS)            # "cpu" o "cuda"
+        self.declare_parameter("language", LANGUAGE)           # "es"
+        self.declare_parameter("speaker", SPEAKER_TTS)    
+        self.declare_parameter("voice", VOICE_TTS)            #voices are: es_0, es_1, es_2
 
         self.rate: int = int(self.get_parameter("rate").value)
         self.device: str = str(self.get_parameter("device").value).lower()

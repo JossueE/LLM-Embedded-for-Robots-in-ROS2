@@ -7,17 +7,18 @@ from std_msgs.msg import Int16MultiArray
 from threading import Lock
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
 
+from .llm_utils.config import AUDIO_PUBLISHER_DEVICE_ID, AUDIO_PUBLISHER_CHANELS, AUDIO_PUBLISHER_FRAMES_PER_BUFFER, AUDIO_PUBLISHER_DEBUG, SAMPLE_RATE_TTS
 
 class AudioSink(Node):
     def __init__(self) -> None:
         super().__init__("audio_sink")
 
         # --- Parámetros ---
-        self.declare_parameter("rate", 24000)       # Debe coincidir con tu TTS
-        self.declare_parameter("channels", 1)       # Mono int16
-        self.declare_parameter("frames_per_buffer", 256)
-        self.declare_parameter("device_index", -1)  # -1 = default output
-        self.declare_parameter("debug", True)       # logs para ver tráfico
+        self.declare_parameter("rate", SAMPLE_RATE_TTS)       # Debe coincidir con tu TTS
+        self.declare_parameter("channels", AUDIO_PUBLISHER_CHANELS)       # Mono int16
+        self.declare_parameter("frames_per_buffer", AUDIO_PUBLISHER_FRAMES_PER_BUFFER)
+        self.declare_parameter("device_index", AUDIO_PUBLISHER_DEVICE_ID)  # -1 = default output
+        self.declare_parameter("debug", AUDIO_PUBLISHER_DEBUG)       # logs para ver tráfico
 
         self.rate = int(self.get_parameter("rate").value)
         self.channels = int(self.get_parameter("channels").value)

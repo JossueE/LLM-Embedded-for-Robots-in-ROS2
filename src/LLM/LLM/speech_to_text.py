@@ -17,6 +17,8 @@ from std_msgs.msg import Int16MultiArray, Bool, String
 
 # Permite que audio y flag entren en paralelo
 from rclpy.callback_groups import ReentrantCallbackGroup
+
+from .llm_utils.config import SAMPLE_RATE_STT, CHANNELS_INPUT_STT, DEVICE_SELECTOR_STT, LANGUAGE
 cb_group = ReentrantCallbackGroup()
 
 class SileroSTTNode(Node):
@@ -30,12 +32,12 @@ class SileroSTTNode(Node):
         super().__init__("silero_stt_node")
 
         # --- Parámetros ---
-        self.declare_parameter("rate", 16000)               # Debe ser 16k para Silero
-        self.declare_parameter("channels", 1)               # Silero espera mono
-        self.declare_parameter("device", "cpu")             # "cpu" o "cuda" si tienes GPU
+        self.declare_parameter("rate", SAMPLE_RATE_STT)               # Debe ser 16k para Silero
+        self.declare_parameter("channels", CHANNELS_INPUT_STT)               # Silero espera mono
+        self.declare_parameter("device", DEVICE_SELECTOR_STT)             # "cpu" o "cuda" si tienes GPU
 
         #Es inutil al momento, pero lo dejo por si acaso
-        self.declare_parameter("language", "es")            # p.ej. "en", "es" (según modelo)
+        self.declare_parameter("language",LANGUAGE)            # p.ej. "en", "es" (según modelo)
 
         self.rate: int = int(self.get_parameter("rate").value)
         self.channels: int = int(self.get_parameter("channels").value)

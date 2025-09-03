@@ -3,15 +3,17 @@ import atexit
 import numpy as np
 import pyaudio
 import rclpy
+from .llm_utils.config import AUDIO_LISTENER_DEVICE_ID,AUDIO_LISTENER_CHANNELS,AUDIO_LISTENER_FRAMES_PER_BUFFER,AUDIO_LISTENER_SAMPLE_RATE
 from rclpy.node import Node
 from std_msgs.msg import Int16MultiArray, MultiArrayDimension
+
 
 class AudioListenerNode(Node):
     def __init__(self, node_name: str) -> None:
         super().__init__(node_name)
 
         self.pa = pyaudio.PyAudio()
-        self.device_index_ = -1
+        self.device_index_ = AUDIO_LISTENER_DEVICE_ID
         
         self.get_logger().info("Dispositivos de audio de entrada disponibles:")
         # Lista dispositivos para elegir (solo una vez al inicio)
@@ -26,9 +28,9 @@ class AudioListenerNode(Node):
         self.declare_parameters(
             namespace="",
             parameters=[
-                ("channels", 1),
-                ("frames_per_buffer", 1000),  # ~62.5 ms a 16 kHz
-                ("rate", 16000),
+                ("channels", AUDIO_LISTENER_CHANNELS),
+                ("frames_per_buffer", AUDIO_LISTENER_FRAMES_PER_BUFFER),  # ~62.5 ms a 16 kHz
+                ("rate", AUDIO_LISTENER_SAMPLE_RATE),
                 ("device_index", self.device_index_),         
             ],
         )
@@ -101,24 +103,3 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
-
-
-
-    """
-
-    Verifica si el Micro jala Fuera de ROS2
-    
-
-    sudo apt update
-    sudo apt install alsa-utils pavucontrol
-    arecord -l                        # lista tarjetas/dispositivos ALSA
-    arecord -f S16_LE -r 16000 -d 3 /tmp/test.wav
-    aplay /tmp/test.wav               # ¿se escucha? entonces ALSA funciona
-
-    Para el requirements
-    pip install "empy==3.3.4"
-    pip install lark
-
-    Problema con el ALSA
-    https://github.com/Uberi/speech_recognition/issues/526
-"""

@@ -15,10 +15,7 @@ from std_msgs.msg import Int16MultiArray, Bool, String
 import webrtcvad
 import vosk
 from rclpy.parameter import Parameter
-
-DEFAULT_MODEL_FILENAME = "vosk-model-small-es-0.42"
-DEFAULT_MODEL_URL = "https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip"
-
+from .llm_utils.config import DEFAULT_MODEL_FILENAME_WAKE_WORD, DEFAULT_MODEL_URL_WAKE_WORD, ACTIVATION_PHRASE_WAKE_WORD, LISTEN_SECONDS_STT, AUDIO_LISTENER_SAMPLE_RATE, VARIANTS_WAKE_WORD
 
 class WakeWordDetector(Node):
     """Detects a wake word using Vosk + VAD con baja latencia."""
@@ -26,11 +23,11 @@ class WakeWordDetector(Node):
     def __init__(self) -> None:
         super().__init__("wake_word_detector")
 
-        self.declare_parameter("sample_rate", 16000)
-        self.declare_parameter("wake_word", "ok robot")      # palabra “principal”
+        self.declare_parameter("sample_rate", AUDIO_LISTENER_SAMPLE_RATE)
+        self.declare_parameter("wake_word", ACTIVATION_PHRASE_WAKE_WORD)      # palabra “principal”
         self.declare_parameter("inference_node", "inference")
-        self.declare_parameter("listen_seconds", 3.0)
-        self.declare_parameter("variants", ["ok robot", "okay robot", "hey robot"])
+        self.declare_parameter("listen_seconds", LISTEN_SECONDS_STT)
+        self.declare_parameter("variants", VARIANTS_WAKE_WORD)
 
         self.sample_rate = self.get_parameter("sample_rate").value
         self.wake_word = str(self.get_parameter("wake_word").value).lower()
@@ -83,10 +80,11 @@ class WakeWordDetector(Node):
 
     def ensure_vosk_model(self) -> str:
         base_dir = Path(__file__).resolve().parent
-        model_dir = base_dir / DEFAULT_MODEL_FILENAME
-        url = DEFAULT_MODEL_URL
+        model_dir = base_dir / DEFAULT_MODEL_FILENAME_WAKE_WORD
+        url = DEFAULT_MODEL_URL_WAKE_WORD 
+
         if not model_dir.exists():
-            zip_path = base_dir / f"{DEFAULT_MODEL_FILENAME}.zip"
+            zip_path = base_dir / f"{DEFAULT_MODEL_FILENAME_WAKE_WORD}.zip"
             self.get_logger().info(f"[VOSK] Descargando modelo en {zip_path} ...")
             urllib.request.urlretrieve(url, zip_path)
 

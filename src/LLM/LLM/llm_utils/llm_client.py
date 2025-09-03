@@ -14,6 +14,8 @@ except Exception as e:
     raise RuntimeError(
         f"No se pudo importar llama_cpp. Activa venv o instala llama-cpp-python. Detalle: {e}")
 
+from .config import CONTEXT_LLM,THREADS_LLM,N_BACH_LLM,GPU_LAYERS_LLM,CHAT_FORMAT_LLM
+
 def ensure_stt_model(model_name:str , model_url:str) -> str:
     base_dir = Path(__file__).resolve().parent
     model_dir = base_dir / model_name
@@ -38,14 +40,12 @@ class LLM:
         self._lock = threading.Lock()
 
         # Defaults sensatos (CPU-only). Ajusta por env si quieres.
-        self.model_path = os.path.expanduser(
-            os.getenv("OCTOPY_MODEL", model_path)
-        )
-        self.ctx = int(os.getenv("OCTOPY_CTX", "1024"))          # contexto razonable
-        self.threads = int(os.getenv("OCTOPY_THREADS", str(os.cpu_count() or 8)))
-        self.n_batch = int(os.getenv("OCTOPY_N_BATCH", "512"))   # 256–512 bien en CPU
-        self.n_gpu_layers = int(os.getenv("OCTOPY_N_GPU_LAYERS", "0"))  # 0 si no hay CUDA
-        self.chat_format = os.getenv("OCTOPY_CHAT_FORMAT", "chatml-function-calling").strip()
+        self.model_path = os.path.expanduser(os.getenv("OCTOPY_MODEL", model_path))
+        self.ctx = int(os.getenv("OCTOPY_CTX", str(CONTEXT_LLM)))         # contexto razonable
+        self.threads = int(os.getenv("OCTOPY_THREADS",str(THREADS_LLM)))
+        self.n_batch = int(os.getenv("OCTOPY_N_BATCH", str(N_BACH_LLM)))   # 256–512 bien en CPU
+        self.n_gpu_layers = int(os.getenv("OCTOPY_N_GPU_LAYERS", str(GPU_LAYERS_LLM)))  # 0 si no hay CUDA
+        self.chat_format = os.getenv("OCTOPY_CHAT_FORMAT", CHAT_FORMAT_LLM).strip()
 
     def _ensure(self):
         if self._llm is None:

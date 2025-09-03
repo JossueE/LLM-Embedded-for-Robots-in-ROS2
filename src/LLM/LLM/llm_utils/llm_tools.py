@@ -11,6 +11,8 @@ except ImportError:
     _HAS_RF = False
 
 from .llm_intentions import norm_text, extract_place_query
+from .config import FUZZY_LOGIC_ACCURACY_KB, FUZZY_LOGIC_ACCURACY_POSE
+
 
 @dataclass
 class Pose: 
@@ -63,7 +65,7 @@ class KB:
                 s = fuzzy
             if s > best_s:
                 best, best_s = item, s
-        if best and best_s >= 0.75:
+        if best and best_s >= FUZZY_LOGIC_ACCURACY_KB:
             return {"answer": best.get('a',''), "score": round(best_s,3)}
         return {"answer":"","score": round(best_s,3)}
 
@@ -104,7 +106,7 @@ class PosesIndex:
             s = (rf_fuzz.ratio(key,k)/100.0) if _HAS_RF else SequenceMatcher(None, key, k).ratio()
         if s > best_s:
             best_k, best_s = k, s
-        if best_k and best_s >= 0.70:
+        if best_k and best_s >= FUZZY_LOGIC_ACCURACY_POSE:
             return {**self.by_key[best_k].__dict__, "note":"fuzzy"}
         return {"error":"no_encontrado"}
         
