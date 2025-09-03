@@ -36,6 +36,10 @@
 
 ### Setup
 ```bash
+$ sudo dnf install portaudio-devel python3-devel
+```
+
+```bash
 # Clone the repository
 $ git clone https://github.com/JossueE/LLM-Embedded-for-Robots-in-ROS2.git
 $ cd LLM-Embedded-for-Robots-in-ROS2

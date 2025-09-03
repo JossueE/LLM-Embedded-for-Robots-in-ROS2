@@ -72,7 +72,7 @@ class WakeWordDetector(Node):
 
         # Debounce de parciales: p.ej. 2 aciertos seguidos
         self.partial_hits = 0
-        self.required_hits = 20
+        self.required_hits = 15
 
         # 10 ms → menor latencia (160 muestras a 16 kHz)
         self.frame_ms = 10

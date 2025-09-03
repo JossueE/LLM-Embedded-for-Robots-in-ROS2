@@ -30,7 +30,7 @@ def is_pose(t: str) -> bool:
 
 def is_nav(t: str) -> bool:
     t = norm_text(t)
-    return bool(re.search(r"\b(ve a|ve|gira|giera|ir|orientate|vete|avanza|dirigete|dir[ii]gete|camina|lleva|ir|hacia|hasta|a donde|adonde|vea|donde|queda|ubicacion|orienta|apunta|se[nn]ala|dondede)\b", t))
+    return bool(re.search(r"\b(ve a|ve|gira|giera|ir|orientate|vete|avanza|dirigete|dir[ii]gete|camina|lleva|ir|hacia|hasta|a donde|adonde|vea|donde|queda|ubicacion|orienta|apunta|se[nn]ala|dondede|gir|abanza)\b", t))
 
 def extract_place_query(t: str) -> str:
     t = norm_text(t) 
