@@ -21,22 +21,26 @@ class OctopyAgent(Node):
         super().__init__('octopy_agent')
         # ROS IO
         self.pub = self.create_publisher(String, '/answer', 10)
-        self.nav_pub = self.create_publisher(String, '/octopy/nav_cmd', 10)
+        self.nav_pub = self.create_publisher(String, '/navigate_to_place', 10)
+        self.nav_llm = self.create_publisher(String, '/navigate_by_llm', 10)
+        self.state_machine_publisher = self.create_publisher(String, "/state_machine_flag", 10)
+
         self.last_amcl: Optional[PoseWithCovarianceStamped] = None
         self.last_batt: Optional[BatteryState] = None
         self.state_machine_flag = ""
+        
         self.create_subscription(PoseWithCovarianceStamped, '/amcl_pose', self.amcl_cb, 10)
         self.create_subscription(BatteryState, '/battery_state', self.batt_cb, 10)
         self.create_subscription(String, '/transcript', self.on_ask, 10)
         self.state_machine_sub = self.create_subscription(String, "/state_machine_flag", self.state_machine_function, 10)
-        self.state_machine_publisher = self.create_publisher(String, "/state_machine_flag", 10)
+        
 
         # Data
         self.kb = KB( os.path.expanduser(os.getenv("OCTOPY_KB", PATH_KB)))
         self.poses = PosesIndex(os.path.expanduser(os.getenv("OCTOPY_POSES", PATH_POSES)))
         self.model_stt = ensure_stt_model(DEFAULT_MODEL_FILENAME, DEFAULT_MODEL_URL)
         self.llm = LLM(model_path=self.model_stt)
-        self.router = Router(self.kb, self.poses, self.llm, self.tool_get_battery, self.tool_get_current_pose, self.tool_nav_to_place)
+        self.router = Router(self.kb, self.poses, self.llm, self.tool_get_battery, self.tool_get_current_pose, self.tool_nav_to_place, self.publish_natural_move)
         self.get_logger().info('Octopy listo ✅  Publica en /transcript')
 
     # ---- callbacks ----
@@ -107,6 +111,11 @@ class OctopyAgent(Node):
         simulate = True if is_orient else False
         self.publish_nav_cmd(pose, simulate)
         return {"ok": True, "simulate": simulate, "name": pose.get("name"), "target": pose}
+    
+    def publish_natural_move(self, yaw:float , dist:float) -> str:
+        payload = {"yaw":yaw, "distance":dist}
+        self.nav_llm.publish(String(data=json.dumps(payload, ensure_ascii=False)))
+        return "Avanzando"
 
 def main():
     rclpy.init()

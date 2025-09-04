@@ -10,13 +10,14 @@ from .config import MAX_MOVE_DISTANCE_LLM
 
 
 class Router:
-    def __init__(self, kb, poses, llm, tool_get_batt, tool_get_pose, tool_nav):
+    def __init__(self, kb, poses, llm, tool_get_batt, tool_get_pose, tool_nav, natural_move_llm):
         self.kb = kb
         self.poses = poses
         self.llm = llm
         self.tool_get_batt = tool_get_batt
         self.tool_get_pose = tool_get_pose
         self.tool_nav = tool_nav
+        self.natural_move_llm = natural_move_llm
 
     def handle(self, data: str, tipo: str ) -> str: 
         #print(tipo, flush=True) 
@@ -46,7 +47,8 @@ class Router:
                 plan = self.llm.plan_motion(data) 
                 if plan: 
                     yaw, dist = _clamp_motion(plan.get("yaw", 0.0), plan.get("distance", 0.0)) 
-                    return json.dumps({"yaw": yaw, "distance": dist}, ensure_ascii=False) 
+                    m = self.natural_move_llm(yaw, dist)
+                    return m, json.dumps({"yaw": yaw, "distance": dist}, ensure_ascii=False) 
                 return "No encontré ese destino ni entiendo la orden."
         else:
             return "Tu retorno no machea con nada, revisa split_and_prioritize en intentions"
