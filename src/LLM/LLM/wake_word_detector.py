@@ -58,14 +58,15 @@ class WakeWordDetector(Node):
         )
         self.state_machine_publisher.publish(String(data="wake_word"))
 
-        self.flag_wake_word = self.create_publisher(Bool, "/flag_wake_word", 10)
-        self.flag_wake_word.publish(Bool(data=False))
+        self.flag_wake_word = self.create_publisher(String, "/flag_wake_word", 10)
+        self.flag_wake_word.publish(String(data="deactivate"))
 
         self.param_client = self.get_parameter("inference_node").value
 
+        self.listening_confirm = False
         self.listening = False
         self.listen_timer = None
-        self.state_machine_flag = ""
+        self.state_machine_flag = "wake_word"
 
         # Debounce de parciales: p.ej. 2 aciertos seguidos
         self.partial_hits = 0
@@ -119,9 +120,11 @@ class WakeWordDetector(Node):
 
                 # Gate de VAD: si no parece voz, resetea hits y sigue
                 if not self.vad.is_speech(frame, self.sample_rate):
-                    self.partial_hits = 0
-                    # IMPORTANTE: aún así alimentamos al recognizer para el timing interno
+                    if self.partial_hits > -self.required_hits:
+                        self.partial_hits -= 1
                     self.rec.AcceptWaveform(frame)
+                    if (self.listening or self.listening_confirm) and self.partial_hits <= -self.required_hits:
+                        self.deactivate_whisper()
                     continue
 
                 # Alimenta el recognizer
@@ -131,13 +134,14 @@ class WakeWordDetector(Node):
                     text = result.get("text", "").lower().strip()
                     if text and self.matches_wake(text):
                         self.get_logger().info(f"[FULL] Wake word: {text!r}")
-                        self.activate_whisper()
+                        self.confirm_active_whisper()
                         self.partial_hits = 0
                         return
                     # Si el full no trae, cae a parciales de nuevo
                     self.partial_hits = 0
+                    if self.listening or self.listening_confirm:
+                        self.deactivate_whisper()
                 else:
-                    # 2) Parcial de bajísima latencia
                     partial = json.loads(self.rec.PartialResult()).get("partial", "").lower().strip()
                     if partial:
                         if self.matches_wake(partial):
@@ -151,22 +155,32 @@ class WakeWordDetector(Node):
                             # si el parcial no contiene la clave, resetea el contador
                             self.partial_hits = 0
 
+                            
+    
+    def confirm_active_whisper(self) -> None:
+        if self.listening_confirm:
+            return
+        self.listening_confirm = True
+        self.flag_wake_word.publish(String(data="confirmation"))
+        duration = float(self.get_parameter("listen_seconds").value)
+        self.listen_timer = self.create_timer(duration, self.deactivate_whisper)
+
     def activate_whisper(self) -> None:
         if self.listening:
             return
         self.listening = True
-        self.flag_wake_word.publish(Bool(data=True))
-        duration = float(self.get_parameter("listen_seconds").value)
-        # Timer one-shot
-        self.listen_timer = self.create_timer(duration, self.deactivate_whisper)
+        self.flag_wake_word.publish(String(data="active"))
+        
 
     def deactivate_whisper(self) -> None:
         if self.listen_timer is not None:
             self.listen_timer.cancel()
             self.listen_timer = None
-        self.flag_wake_word.publish(Bool(data=False))
-        self.state_machine_publisher.publish(String(data="speech_to_text"))
+        self.flag_wake_word.publish(String(data="deactivate"))
+        if self.listening_confirm:
+            self.state_machine_publisher.publish(String(data="speech_to_text"))
         self.listening = False
+        self.listening_confirm = False
 
     def _set_inference_active(self, value: bool) -> None:
         param = Parameter("active", Parameter.Type.BOOL, value)

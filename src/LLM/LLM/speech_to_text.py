@@ -87,8 +87,8 @@ class SileroSTTNode(Node):
         self._ort_in_name = self.ort_session.get_inputs()[0].name 
 
         # --- Estado / buffers ---
-        self._flag: bool = False
-        self._prev_flag: bool = False
+        self._flag: String = "deactivate"
+        self.flag_prev: String = "deactivate"
         self._buffer = bytearray()
         self._lock = threading.Lock()
         self.state_machine_flag = ""
@@ -105,7 +105,7 @@ class SileroSTTNode(Node):
             Int16MultiArray, "/audio", self.audio_callback, 10, callback_group=cb_group
         )
         self.flag_sub = self.create_subscription(
-            Bool, "/flag_wake_word", self.flag_callback, 10, callback_group=cb_group
+            String, "/flag_wake_word", self.flag_callback, 10, callback_group=cb_group
         )
         self.state_machine_sub = self.create_subscription(
             String, "/state_machine_flag", self.state_machine_function, 10
@@ -119,35 +119,36 @@ class SileroSTTNode(Node):
             "Transcribe cuando /flag_wake_word cae de True a False."
         )
         
-
-
     # -------------------- Callbacks --------------------
     def state_machine_function(self, msg: String) -> None:
         self.state_machine_flag = msg.data
 
     def audio_callback(self, msg: Int16MultiArray) -> None:
         """Acumula frames Int16 mientras flag sea True."""
-        if not self._flag:
+        if self._flag == "deactivate":
+            if self.flag_prev == "active":
+                with self._lock:
+                    self._buffer.clear()
             return
         frames = np.asarray(msg.data, dtype=np.int16)
         with self._lock:
             self._buffer.extend(frames.tobytes())
 
-    def flag_callback(self, msg: Bool) -> None:
+    def flag_callback(self, msg: String) -> None:
         """En el flanco de bajada, envía buffer a la cola de trabajo."""
-        self._flag = bool(msg.data)
-        if (not self._flag) and self._prev_flag:
+        self._flag = msg.data
+        if  self._flag == "deactivate" and self.flag_prev == "confirmation":
             # Copiamos y vaciamos buffer de forma atómica
             with self._lock:
                 if len(self._buffer) == 0:
-                    self._prev_flag = self._flag
+                    self.flag_prev = self._flag
                     return
                 chunk = bytes(self._buffer)
                 self._buffer.clear()
 
             # Encolar para transcripción
             self._work_queue.append(chunk)
-        self._prev_flag = self._flag
+        self.flag_prev = self._flag
 
     # -------------------- Worker --------------------
 
