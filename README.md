@@ -10,14 +10,14 @@
 ---
 ## 📝 Flowchart
 <div style="overflow-x:auto; border:1px solid #eaecef; padding:6px;">
-  <img src="Diagrama de Flujo.svg"
-       alt="Diagrama de flujo"
-       style="max-width:none; height:auto;"
-       width="4000">
+  <img
+    src="Diagrama de Flujo.svg"
+    alt="Flowchart"
+    style="max-width:none; display:block; height:900px;" />
 </div>
 
 <p align="right">
-  <a href="Diagrama de Flujo.svg">Open SVG in real size</a>
+  <a href="https://lucid.app/lucidchart/50ed3019-62f3-460d-a3e3-071d72727e35/view">Open SVG in real size</a>
 </p>
 
 ---
