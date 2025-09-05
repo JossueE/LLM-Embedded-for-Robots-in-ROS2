@@ -9,11 +9,11 @@
 
 ---
 ## 📝 Flowchart
-<div style="overflow-x:auto; border:1px solid #eaecef; padding:6px;">
-  <img
-    src="Diagrama de Flujo.svg"
-    alt="Flowchart"
-    style="max-width:none; display:block; height:900px;" />
+<div style="overflow:auto; border:1px solid #eaecef; padding:6px;">
+  <object data="Diagrama de Flujo.svg" type="image/svg+xml" width="4400">
+    <!-- Fallback para visores viejos -->
+    <img src="Diagrama de Flujo.svg" alt="Flowchart" />
+  </object>
 </div>
 
 <p align="right">
