@@ -9,12 +9,16 @@
 
 ---
 ## 📝 Flowchart
-[See the full Diagram (SVG)](<Diagrama de Flujo.svg>)
+<div style="overflow-x:auto; border:1px solid #eaecef; padding:6px;">
+  <img src="Diagrama de Flujo.svg"
+       alt="Diagrama de flujo"
+       style="max-width:none; height:auto;"
+       width="4000">
+</div>
 
-<p align="center">
-  <img src="Diagrama de Flujo.svg" alt="Diagrama de Flujo" />
+<p align="right">
+  <a href="Diagrama de Flujo.svg">Open SVG in real size</a>
 </p>
-
 
 ---
 
