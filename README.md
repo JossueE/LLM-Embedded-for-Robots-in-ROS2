@@ -8,6 +8,15 @@
 **LLM-Embedded-for-Robots-in-ROS2** is a ROS2 framework that fuses a local Large Language Model with a full offline speech pipeline so robots can understand and respond to natural language without the cloud.
 
 ---
+## 📝 Flowchart
+[See the full Diagram (SVG)](<Diagrama de Flujo.svg>)
+
+<p align="center">
+  <img src="Diagrama de Flujo.svg" alt="Diagrama de Flujo" />
+</p>
+
+
+---
 
 ## 📚 Table of Contents
 - [Installation](#installation)

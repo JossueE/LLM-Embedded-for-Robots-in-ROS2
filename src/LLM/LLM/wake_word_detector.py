@@ -109,51 +109,52 @@ class WakeWordDetector(Node):
         return False
 
     def audio_callback(self, msg: Int16MultiArray) -> None:
-        if self.state_machine_flag == "wake_word":
-            # bytes de audio
-            audio_bytes = np.array(msg.data, dtype=np.int16).tobytes()
+        if self.state_machine_flag != "wake_word":
+            return
+        
+        audio_bytes = np.array(msg.data, dtype=np.int16).tobytes()
 
-            # Procesa en frames cortos de 10 ms
-            fb = self.frame_bytes
-            for i in range(0, len(audio_bytes) - fb + 1, fb):
-                frame = audio_bytes[i : i + fb]
+        # Procesa en frames cortos de 10 ms
+        fb = self.frame_bytes
+        for i in range(0, len(audio_bytes) - fb + 1, fb):
+            frame = audio_bytes[i : i + fb]
 
-                # Gate de VAD: si no parece voz, resetea hits y sigue
-                if not self.vad.is_speech(frame, self.sample_rate):
-                    if self.partial_hits > -self.required_hits:
-                        self.partial_hits -= 1
-                    self.rec.AcceptWaveform(frame)
-                    if (self.listening or self.listening_confirm) and self.partial_hits <= -self.required_hits:
-                        self.deactivate_whisper()
-                    continue
+            # Gate de VAD: si no parece voz, resetea hits y sigue
+            if not self.vad.is_speech(frame, self.sample_rate):
+                if self.partial_hits > -self.required_hits:
+                    self.partial_hits -= 1
+                self.rec.AcceptWaveform(frame)
+                if (self.listening or self.listening_confirm) and self.partial_hits <= -self.required_hits:
+                    self.deactivate_whisper()
+                continue
 
-                # Alimenta el recognizer
-                # 1) Si Vosk cree que hay “cierre” de palabra/frase
-                if self.rec.AcceptWaveform(frame):
-                    result = json.loads(self.rec.Result())
-                    text = result.get("text", "").lower().strip()
-                    if text and self.matches_wake(text):
-                        self.get_logger().info(f"[FULL] Wake word: {text!r}")
-                        self.confirm_active_whisper()
-                        self.partial_hits = 0
-                        return
-                    # Si el full no trae, cae a parciales de nuevo
+            # Alimenta el recognizer
+            # 1) Si Vosk cree que hay “cierre” de palabra/frase
+            if self.rec.AcceptWaveform(frame):
+                result = json.loads(self.rec.Result())
+                text = result.get("text", "").lower().strip()
+                if text and self.matches_wake(text):
+                    self.get_logger().info(f"[FULL] Wake word: {text!r}")
+                    self.confirm_active_whisper()
                     self.partial_hits = 0
-                    if self.listening or self.listening_confirm:
-                        self.deactivate_whisper()
-                else:
-                    partial = json.loads(self.rec.PartialResult()).get("partial", "").lower().strip()
-                    if partial:
-                        if self.matches_wake(partial):
-                            self.partial_hits += 1
-                            if self.partial_hits >= self.required_hits:
-                                self.get_logger().info(f"[PARTIAL] Wake word: {partial!r}")
-                                self.activate_whisper()
-                                self.partial_hits = 0
-                                return
-                        else:
-                            # si el parcial no contiene la clave, resetea el contador
+                    return
+                # Si el full no trae, cae a parciales de nuevo
+                self.partial_hits = 0
+                if self.listening or self.listening_confirm:
+                    self.deactivate_whisper()
+            else:
+                partial = json.loads(self.rec.PartialResult()).get("partial", "").lower().strip()
+                if partial:
+                    if self.matches_wake(partial):
+                        self.partial_hits += 1
+                        if self.partial_hits >= self.required_hits:
+                            self.get_logger().info(f"[PARTIAL] Wake word: {partial!r}")
+                            self.activate_whisper()
                             self.partial_hits = 0
+                            return
+                    else:
+                        # si el parcial no contiene la clave, resetea el contador
+                        self.partial_hits = 0
 
                             
     
