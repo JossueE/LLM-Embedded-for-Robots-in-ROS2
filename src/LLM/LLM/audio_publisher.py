@@ -3,7 +3,7 @@ import numpy as np
 import pyaudio
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int16MultiArray
+from std_msgs.msg import Int16MultiArray, String
 from threading import Lock
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy, DurabilityPolicy
 
@@ -26,6 +26,7 @@ class AudioSink(Node):
         self.debug = bool(self.get_parameter("debug").value)
         dev_idx = int(self.get_parameter("device_index").value)
         self.device_index = None if dev_idx < 0 else dev_idx
+        self._flag: str = "deactivate"
 
         # --- PyAudio ---
         self.pa = pyaudio.PyAudio()
@@ -45,6 +46,10 @@ class AudioSink(Node):
             Int16MultiArray, "/tts_audio", self.cb_audio, qos
         )
 
+        self.flag_sub = self.create_subscription(
+            String, "/flag_wake_word", self.flag_callback, 10
+        )
+
         self.get_logger().info(
             f"AudioSink ▶️ rate={self.rate} Hz, ch={self.channels}, "
             f"fpb={self.frames_per_buffer}, device_index={self.device_index}"
@@ -61,6 +66,11 @@ class AudioSink(Node):
             start=True,
         )
 
+    def flag_callback(self, msg: String) -> None:
+        """En el flanco de bajada, envía buffer a la cola de trabajo."""
+        self._flag = msg.data
+        
+            
     def _reopen_stream(self):
         try:
             if self.stream is not None:
@@ -71,7 +81,7 @@ class AudioSink(Node):
         self.stream = self._open_stream()
 
     def cb_audio(self, msg: Int16MultiArray) -> None:
-        if not msg.data:
+        if not msg.data or self._flag == "confirmation":
             return
         try:
             pcm = np.asarray(msg.data, dtype=np.int16)
