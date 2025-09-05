@@ -47,7 +47,8 @@ VOICE_TTS = "es_2" #voices are: es_0, es_1, es_2
 SAMPLE_RATE_STT = 16000 #Silero works at this sample_rate doesn't change unless it is necesarry
 CHANNELS_INPUT_STT = 1 #mono or stereo, silero use mono
 DEVICE_SELECTOR_STT = "cpu" # "cpu" or "cuda"
-LISTEN_SECONDS_STT = 3.0 #The time of the phrase that the tts is going to be active after de wake_word detection
+#IMPORTANT the system is prepare to work without this variable, but we have it for noisy enviroments, as a protection method
+LISTEN_SECONDS_STT = 10.0 #The time of the phrase that the tts is going to be active after de wake_word detection
 
 """Wake-Word Node"""
 DEFAULT_MODEL_FILENAME_WAKE_WORD= "vosk-model-small-es-0.42" #The model

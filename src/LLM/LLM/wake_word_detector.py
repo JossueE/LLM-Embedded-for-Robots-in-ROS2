@@ -142,6 +142,7 @@ class WakeWordDetector(Node):
                 self.partial_hits = 0
                 if self.listening or self.listening_confirm:
                     self.deactivate_whisper()
+
             else:
                 partial = json.loads(self.rec.PartialResult()).get("partial", "").lower().strip()
                 if partial:
