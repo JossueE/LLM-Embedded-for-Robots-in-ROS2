@@ -50,7 +50,8 @@
 ### Setup
 ```bash
 sudo apt update
-sudo apt install -y python3-dev python3-venv build-essential portaudio19-dev curl unzip yq
+sudo apt install -y python3-dev python3-venv build-essential portaudio19-dev curl unzip
+sudo snap install yq
 ```
 
 ```bash
