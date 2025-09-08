@@ -11,7 +11,7 @@ import zipfile
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int16MultiArray, Bool, String
+from std_msgs.msg import Int16MultiArray, String
 import webrtcvad
 import vosk
 from rclpy.parameter import Parameter

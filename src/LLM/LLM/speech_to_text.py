@@ -9,11 +9,10 @@ import onnxruntime
 import numpy as np
 import torch
 from omegaconf import OmegaConf
-#import wave
 
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Int16MultiArray, Bool, String
+from std_msgs.msg import Int16MultiArray, String
 
 # Permite que audio y flag entren en paralelo
 from rclpy.callback_groups import ReentrantCallbackGroup

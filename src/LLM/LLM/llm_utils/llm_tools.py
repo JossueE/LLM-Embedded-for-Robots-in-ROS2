@@ -1,6 +1,6 @@
 from __future__ import annotations
 import json
-from typing import Optional, Any, List, Dict
+from typing import Any, List, Dict
 from dataclasses import dataclass
 import math 
 from difflib import SequenceMatcher

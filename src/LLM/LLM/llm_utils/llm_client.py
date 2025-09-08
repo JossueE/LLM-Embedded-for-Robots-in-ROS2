@@ -5,8 +5,7 @@ from pathlib import Path
 import urllib.request
 import json
 from typing import Optional, Dict, Any
-from typing import Any, List
-from rclpy.logging import get_logger
+from typing import Any
 
 try:
     from llama_cpp import Llama

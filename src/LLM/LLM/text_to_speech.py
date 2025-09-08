@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import threading
-from typing import Optional
 
 import numpy as np
 import torch
