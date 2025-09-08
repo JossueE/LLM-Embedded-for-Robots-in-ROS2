@@ -17,7 +17,9 @@ from std_msgs.msg import Int16MultiArray, String
 # Permite que audio y flag entren en paralelo
 from rclpy.callback_groups import ReentrantCallbackGroup
 
-from .llm_utils.config import SAMPLE_RATE_STT, CHANNELS_INPUT_STT, DEVICE_SELECTOR_STT, LANGUAGE
+from .llm_utils.config import SAMPLE_RATE_STT, CHANNELS_INPUT_STT, DEVICE_SELECTOR_STT, LANGUAGE, LISTENER_STT
+from .llm_utils.llm_tools import ensure_model
+
 cb_group = ReentrantCallbackGroup()
 
 class SileroSTTNode(Node):
@@ -64,21 +66,7 @@ class SileroSTTNode(Node):
 
         (read_batch, split_into_batches, read_audio, prepare_model_input) = utils
 
-        base_dir = Path(__file__).resolve().parent
-        models_yml = base_dir / "models.yml"
-        if not models_yml.exists():
-            torch.hub.download_url_to_file('https://raw.githubusercontent.com/snakers4/silero-models/master/models.yml', str(models_yml))
-        models = OmegaConf.load(str(models_yml))
-        lang = getattr(self, "language", "es")
-        available_languages = list(models.stt_models.keys())
-        if lang not in available_languages:
-            self.get_logger().warn(f"[Silero] Idioma '{lang}' no disponible en models.yml; usando 'en'")
-            lang = "es"
-
-        onnx_url = models.stt_models[lang].latest.onnx
-        onnx_model_path = base_dir / f"silero-stt-{lang}.onnx"
-        if not onnx_model_path.exists():
-            torch.hub.download_url_to_file(onnx_url, str(onnx_model_path), progress=True)
+        onnx_model_path = ensure_model(LISTENER_STT)
         onnx_model = onnx.load(str(onnx_model_path))
         onnx.checker.check_model(onnx_model)
         self.ort_session = onnxruntime.InferenceSession(onnx_model_path)

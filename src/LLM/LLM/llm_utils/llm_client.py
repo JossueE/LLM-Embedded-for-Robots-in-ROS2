@@ -16,12 +16,10 @@ except Exception as e:
 from .config import CONTEXT_LLM,THREADS_LLM,N_BACH_LLM,GPU_LAYERS_LLM,CHAT_FORMAT_LLM
 
 def ensure_stt_model(model_name:str , model_url:str) -> str:
-    base_dir = Path(__file__).resolve().parent
+    base_dir = Path(os.environ.get("OCTOPY_CACHE", os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache")))) / "octopy"
     model_dir = base_dir / model_name
-    url = model_url
     if not model_dir.exists():
-        print(f"[LLM_model] Descargando modelo en {model_dir} ...", flush=True)
-        urllib.request.urlretrieve(url, model_dir)
+        return f"[LLM_LOADER] Ruta directa no existe: {model_dir}\n"
     return str(model_dir)
 
 class LLM:

@@ -2,6 +2,8 @@ from __future__ import annotations
 import json
 from typing import Any, List, Dict
 from dataclasses import dataclass
+from pathlib import Path
+import os
 import math 
 from difflib import SequenceMatcher
 try:
@@ -119,3 +121,52 @@ def quat_to_yaw_deg(q) -> float:
     if deg > 180.0: deg -= 360.0
     if deg <= -180.0: deg += 360.0
     return deg
+
+def ensure_model(model_name: str) -> str:
+
+    # 0) Si te pasan una ruta absoluta/ ~, respétala
+    p = Path(model_name).expanduser()
+    if p.is_absolute():
+        p = p.resolve()
+        if p.exists():
+            return str(p)
+        raise FileNotFoundError(
+            f"[LLM_LOADER] Ruta directa no existe: {p}\n"
+            f"Ejecuta el prerrequisito y vuelve a lanzar ROS:\n"
+            f'  pkg_prefix="$(ros2 pkg prefix LLM)" && '
+            f'  bash "$pkg_prefix/share/LLM/scripts/download_models.sh"'
+        )
+
+    cache = Path(os.environ.get("OCTOPY_CACHE",
+                 os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache")))).joinpath("octopy")
+
+    clean = model_name.split("?", 1)[0].split("#", 1)[0]
+
+    candidates = []
+
+    candidates.append(cache / clean)
+
+    if "." not in Path(clean).name:
+        for ext in (".pt", ".onnx", ".gguf", ".bin"):
+            candidates.append(cache / f"{clean}{ext}")
+
+    if clean.endswith(".zip"):
+        candidates.insert(0, cache / Path(clean).with_suffix("").name) 
+        candidates.append(cache / clean) 
+
+    for c in candidates:
+        if c.exists():
+            return str(c.resolve())
+    stem = Path(clean).stem
+    flex_matches = list(cache.glob(stem)) + list(cache.glob(stem + ".*"))
+    if len(flex_matches) == 1 and flex_matches[0].exists():
+        return str(flex_matches[0].resolve())
+    raise FileNotFoundError(
+        f"[LLM_LOADER] No se encontró el modelo en: {cache / clean}\n"
+        f"Busca por nombre: {stem}\n"
+        f"Ejecuta el prerrequisito y vuelve a lanzar ROS:\n"
+        f'  pkg_prefix="$(ros2 pkg prefix LLM)" && '
+        f'  bash "$pkg_prefix/share/LLM/scripts/download_models.sh"'
+    )
+
+    

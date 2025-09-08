@@ -4,8 +4,6 @@ from typing import List
 #This is Use for Donwload the model
 import os
 from pathlib import Path
-import urllib.request
-import zipfile
 
 #To manage the audio stream
 import numpy as np
@@ -16,6 +14,7 @@ import webrtcvad
 import vosk
 from rclpy.parameter import Parameter
 from .llm_utils.config import DEFAULT_MODEL_FILENAME_WAKE_WORD, DEFAULT_MODEL_URL_WAKE_WORD, ACTIVATION_PHRASE_WAKE_WORD, LISTEN_SECONDS_STT, AUDIO_LISTENER_SAMPLE_RATE, VARIANTS_WAKE_WORD
+from .llm_utils.llm_tools import ensure_model
 
 class WakeWordDetector(Node):
     """Detects a wake word using Vosk + VAD con baja latencia."""
@@ -40,7 +39,7 @@ class WakeWordDetector(Node):
         # Construimos gramática JSON con las variantes
         grammar = json.dumps(self.variants, ensure_ascii=False)
 
-        model_path = self.ensure_vosk_model()
+        model_path = ensure_model(DEFAULT_MODEL_URL_WAKE_WORD)
         self.model = vosk.Model(model_path)
 
         self.rec = vosk.KaldiRecognizer(self.model, self.sample_rate, grammar)
@@ -78,22 +77,6 @@ class WakeWordDetector(Node):
 
     def state_machine_function(self, msg: String) -> None:
         self.state_machine_flag = msg.data
-
-    def ensure_vosk_model(self) -> str:
-        base_dir = Path(__file__).resolve().parent
-        model_dir = base_dir / DEFAULT_MODEL_FILENAME_WAKE_WORD
-        url = DEFAULT_MODEL_URL_WAKE_WORD 
-
-        if not model_dir.exists():
-            zip_path = base_dir / f"{DEFAULT_MODEL_FILENAME_WAKE_WORD}.zip"
-            self.get_logger().info(f"[VOSK] Descargando modelo en {zip_path} ...")
-            urllib.request.urlretrieve(url, zip_path)
-
-            self.get_logger().info(f"[VOSK] Extrayendo en {base_dir} ...")
-            with zipfile.ZipFile(zip_path, "r") as zf:
-                zf.extractall(base_dir)
-            os.remove(zip_path)
-        return str(model_dir)
 
     def norm(self, s: str) -> str:
         # Normaliza a lower y quita tildes simples

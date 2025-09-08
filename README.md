@@ -25,9 +25,9 @@
 ## 📚 Table of Contents
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Usage](#usage)
 - [Configuration](#configuration)
 - [Project Structure](#project-structure)
-- [Usage](#usage)
 - [Contributing](#contributing) 
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
@@ -50,7 +50,7 @@
 ### Setup
 ```bash
 sudo apt update
-sudo apt install -y python3-dev python3-venv build-essential portaudio19-dev
+sudo apt install -y python3-dev python3-venv build-essential portaudio19-dev curl unzip yq
 ```
 
 ```bash
@@ -76,47 +76,95 @@ pip install -r requirements.txt
 colcon build
 source install/setup.bash
 ```
+Run the downloader to fetch any missing models:
+```bash
+# Install all the models for the LLM Integration
+bash "$(ros2 pkg prefix LLM)/share/LLM/scripts/download_models.sh"
+```
+The script installs everything into your cache (`~/.cache/octopy`, or `$OCTOPY_CACHE` if set).
+You’re done when you see:
+```bash
+"OK. Modelos listos en: $CACHE_DIR ✅ "
+```
 ---
 
 <h2 id="quick-start">⚡ Quick Start</h2>
-Run the example launch file to start the wake-word → STT → LLM → TTS pipeline:
+
+### Launch the full pipeline (Wake-Word → STT → LLM → TTS)
+
+Start everything with:
+
 ```bash
 ros2 launch LLM LLM.launch.py
 ```
-The fisrt time, the models will be donwloaded, so it could take a little bit. Don't say anithing until you see and don't stop the process.
+This launch uses your default microphone. You’ll know the nodes are ready when you see logs like:
 
 ```bash
 [llm_main-4] [INFO] [xxxxxxxxxx.xxxxxxxxx] [octopy_agent]: Octopy listo ✅  Publica en /transcript
-```
-and
-```bash
+
+[python-2] [INFO] [xxxxxxxxxx.xxxxxxxxxx] [audio_sink]: AudioSink ▶️ rate=24000 Hz, ch=1, fpb=256, device_index=None
 
 [stt-3] [INFO] [xxxxxxxxxx.xxxxxxxxxx] [silero_stt_node]: Silero listo 🔊 SR=16000ch=1 device=cpu lang=es
 [stt-3] Transcribe cuando /flag_wake_word cae de True a False.
 
 [tts-6] [INFO] [xxxxxxxxxx.xxxxxxxxxx] [silero_tts_node]: Silero TTS listo 🔊 rate=24000 device=cpu lang=es speaker=v3_es
 
-[python-2] [INFO] [xxxxxxxxxx.xxxxxxxxxx] [audio_sink]: AudioSink ▶️ rate=24000 Hz, ch=1, fpb=256, device_index=None
-
 ```
+Now say `ok robot` — the system will start listening and run the pipeline.
 
-### Test just a Node
-You could use the follow example or try to speak in the microphone
-> [!TIP]
-> By this way you are sure that you call your virtual env
+<h2 id="usage">🧪 Usage</h2>
 
-```bash
-# Run the LLM agent Node
-home/<your user>/LLM-Embedded-for-Robots-in-ROS2/.venv/bin/python3 /home/<your user>/LLM-Embedded-for-Robots-in-ROS2/install/LLM/lib/LLM/llm_main
-```
+### Agent intents (`handle(data, tipo)`)
+| `tipo`     | What it does | Input `data` | Output shape |
+|---|---|---|---|
+| `rag` | Returns `data` as-is (external RAG already resolved). |  Pre-composed **string** from your RAG - `kb.json`| `str` |
+| `general` | Free-form Q&A via `llm.answer_general`. | Question | `str` |
+| `battery` | Reads `%` via `tool_get_batt()`. | Reads battery status from `/battery_state` (message type: `sensor_msgs/msg/BatteryState`).| `str` like `Mi batería es: 84.0%` (or no-reading msg) |
+| `pose` | Reads AMCL pose via `tool_get_pose()`. | Reads battery status from `/amcl_pose` (message type: `sensor_msgs/msg/PoseWithCovarianceStamped`). | `str` (no pose) **or** JSON `{"x","y","yaw_deg","frame"}` |
+| `navigate` | Navigate to a named place or generate a short motion. Tries `tool_nav(data)` first (KB/`poses.json`): if found, replies **"Voy"** (execute) or **"Por allá"** (indicate/simulate). If not found, falls back to `llm.plan_motion(data)` → `_clamp_motion(...)` → `natural_move_llm(...)`. | Pre-composed string from your RAG - poses.json and `str` Natural-language place or motion command (e.g., `ve a la enfermería`, `gira 90° y avanza 0.5 m`). | Usually `str`. On fallback may return a **tuple**: `(mensaje, '{"yaw": <deg>, "distance": <m>}' )`. |
 
-Mic → Wake Word → STT → LLM/Tools → TTS → Speaker
+> If you consume the agent’s reply topic, handle both cases for `navigate`: always speak/log the **string**; optionally route the **JSON** telemetry if present.
+
+---
+
+### Set your topics (fill these in)
+
+#### Core agent topics
+| Purpose | Default | **Your topic** |
+|---|---|---|
+| Input (String **in**) | `/transcript` | `________________________` |
+| Answer (String **out**) | `/answer` | `________________________` |
+
+#### Extra topics required by intents
+| Intent (`tipo`) | Needs… | Default | **Your topic** |
+|---|---|---|---|
+| `battery` | Battery state | `/battery_state` | `________________________` |
+| `pose` | AMCL pose | `/amcl_pose` | `________________________` |
+| `navigate` | Nav stack topics/actions you use (e.g., Nav2 goal action) | *(your Nav2 setup)* | `________________________` |
+
+#### Voice pipeline (optional, if you use WW→STT→TTS)
+| Purpose | Default | **Your topic** |
+|---|---|---|
+| Raw audio (Int16MultiArray **in**) | `/audio` | `________________________` |
+| Raw audio (Int16MultiArray **out**) | `/audio_publisher` | `________________________` |
+| Wake-word flag (Bool **out**) | `/flag_wake_word` | `________________________` |
+
+
 
 <h2 id="configuration">⚙️ Configuration</h2>
 > [!WARNING]
 > LLMs and audio models can be large. Ensure you have enough **disk space** and **RAM/VRAM** for your chosen settings.
 
 All runtime settings live in **`config/config.py`**. They are plain Python constants—edit the file and restart your nodes to apply changes.
+
+### 📦 Model catalog (`model.yml`)
+
+Define which models Octybot uses (LLM, STT, TTS, wake-word) along with their URLs and sample rates.
+
+> ⚠️ **Important:** The **`name`** of every model in `model.yml` must match **exactly** the name you use in `config.py` **and** the name documented in this README (same text and file extension).
+
+### 🔗 Required matching with `config.py`
+Use the **same strings** from `model.yml` in your Python config:
 
 > [!TIP]
 > If you build with `colcon build --symlink-install`, Python edits are picked up without rebuilding. Otherwise, rebuild and `source install/setup.bash`.
@@ -135,9 +183,15 @@ from .llm_utils.config  import AUDIO_LISTENER_SAMPLE_RATE, DEFAULT_MODEL_FILENAM
 ```text
 LLM-Embedded-for-Robots-in-ROS2/
 ├── src/
+|   ├──config
+|   |  └──models.yml
+|   ├──scripts
+|   |  └──download_models.sh
+|   ├──launch
+|   |  └──LLM.launch.py
 |   ├──data
 |   |  ├──kb.json
-|   |  └── poses.json
+|   |  └──poses.json
 │   └── LLM/                 # ROS2 package: agent, STT, wake word, TTS
 │       ├──llm_utils
 │       │  ├──data.py 
@@ -155,15 +209,6 @@ LLM-Embedded-for-Robots-in-ROS2/
 ├── requirements.txt
 └── README.md
 ```
-<h2 id="usage">🧪 Usage</h2>
-### ROS Topics
-- `/audio` – raw audio input
-- `/flag_wake_word` – wake word detection flag
-- `/transcript` – speech-to-text output
-- `/octopy/ask` – text questions to the LLM agent
-- `/octopy/answer` – agent replies
-- `/battery_state` – battery feedback for tools
-- `/amcl_pose` – pose feedback for tools
 
 <h2 id="contributing">🤝 Contributing</h2>
 Contributions are welcome! Please fork the repository and submit a pull request. For major changes, open an issue first to discuss what you would like to change.

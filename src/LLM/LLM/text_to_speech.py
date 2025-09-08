@@ -9,6 +9,7 @@ from std_msgs.msg import Int16MultiArray, MultiArrayDimension, String
 from rclpy.callback_groups import ReentrantCallbackGroup
 
 from .llm_utils.config import LANGUAGE, SAMPLE_RATE_TTS, DEVICE_SELECTOR_TTS, SPEAKER_TTS, VOICE_TTS
+from .llm_utils.llm_tools import ensure_model
 
 cb_group = ReentrantCallbackGroup()
 
@@ -60,33 +61,24 @@ class SileroTTSNode(Node):
             f"Silero TTS listo 🔊 rate={self.rate} device={self.device} lang={self.language} speaker={self.speaker}"
         )
 
+
     def load_silero_model(self):
-        if self.local_bundle:
+
+        if getattr(self, "local_bundle", None):
             bundle_path = Path(self.local_bundle).expanduser().resolve()
             if not bundle_path.exists():
                 raise FileNotFoundError(f"local_bundle no existe: {bundle_path}")
-            # Carga desde .pt empaquetado (formato de Silero)
-            self.get_logger().info(f"Cargando bundle local: {bundle_path}")
+            self.get_logger().info(f"[Silero TTS] Cargando bundle local: {bundle_path}")
             importer = torch.package.PackageImporter(str(bundle_path))
             model = importer.load_pickle("tts_models", "model")
             return model
 
-        # Fallback: torch.hub
-        self.get_logger().info(
-            "Cargando desde torch.hub snakers4/silero-models (usa TORCH_HOME para cachear en otra ruta)"
-        )
-        loaded = torch.hub.load(
-            repo_or_dir="snakers4/silero-models",
-            model="silero_tts",
-            language=self.language,
-            speaker=self.speaker,  # familia del modelo español
-        )
+        bundle_name = getattr(self, "tts_bundle_name", SPEAKER_TTS)
+        bundle_path = Path(ensure_model(bundle_name))  # <- usa tu ensure_model
 
-        # Algunas versiones retornan solo el modelo; otras, tupla.
-        if isinstance(loaded, (list, tuple)):
-            model = loaded[0]
-        else:
-            model = loaded
+        self.get_logger().info(f"[Silero TTS] Cargando bundle desde caché: {bundle_path}")
+        importer = torch.package.PackageImporter(str(bundle_path))
+        model = importer.load_pickle("tts_models", "model")
         return model
     
     # -------------------- Callbacks --------------------

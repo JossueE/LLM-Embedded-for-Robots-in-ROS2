@@ -1,0 +1,20 @@
+# Catalog that supports Octybot
+
+llm:
+  - name: qwen2.5-3b-instruct-q4_k_m.gguf
+    url: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf?download=true
+
+stt:
+  - name: stt-silero-es_v1.onnx
+    sample_rate: 16000
+    url: "https://models.silero.ai/models/es/es_v1.onnx"
+
+tts:
+  - name: v3_es.pt
+    sample_rate: 24000
+    url: https://models.silero.ai/models/tts/es/v3_es.pt
+
+wake_word:
+  - name: vosk-model-small-es-0.42
+    sample_rate: 16000
+    url: https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip
