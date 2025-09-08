@@ -24,9 +24,9 @@
 
 ## 📚 Table of Contents
 - [Installation](#installation)
+- [Configuration](#configuration)
 - [Quick Start](#quick-start)
 - [Usage](#usage)
-- [Configuration](#configuration)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing) 
 - [License](#license)
@@ -88,6 +88,34 @@ You’re done when you see:
 "OK. Modelos listos en: $CACHE_DIR ✅ "
 ```
 ---
+
+<h2 id="configuration">⚙️ Configuration</h2>
+> [!WARNING]
+> LLMs and audio models can be large. Ensure you have enough **disk space** and **RAM/VRAM** for your chosen settings.
+
+All runtime settings live in **`config/config.py`**. They are plain Python constants—edit the file and restart your nodes to apply changes.
+
+### 📦 Model catalog (`model.yml`)
+
+Define which models Octybot uses (LLM, STT, TTS, wake-word) along with their URLs and sample rates.
+
+> ⚠️ **Important:** The **`name`** of every model in `model.yml` must match **exactly** the name you use in `config.py` **and** the name documented in this README (same text and file extension).
+
+### 🔗 Required matching with `config.py`
+Use the **same strings** from `model.yml` in your Python config:
+
+> [!TIP]
+> If you build with `colcon build --symlink-install`, Python edits are picked up without rebuilding. Otherwise, rebuild and `source install/setup.bash`.
+
+### Importing settings in your code
+```python
+# if you re-export in config/__init__.py
+from .config import AUDIO_LISTENER_SAMPLE_RATE, DEFAULT_MODEL_FILENAME
+
+# otherwise
+from .llm_utils.config  import AUDIO_LISTENER_SAMPLE_RATE, DEFAULT_MODEL_FILENAME
+
+```
 
 <h2 id="quick-start">⚡ Quick Start</h2>
 
@@ -151,34 +179,6 @@ Now say `ok robot` — the system will start listening and run the pipeline.
 | Wake-word flag (Bool **out**) | `/flag_wake_word` | `________________________` |
 
 
-
-<h2 id="configuration">⚙️ Configuration</h2>
-> [!WARNING]
-> LLMs and audio models can be large. Ensure you have enough **disk space** and **RAM/VRAM** for your chosen settings.
-
-All runtime settings live in **`config/config.py`**. They are plain Python constants—edit the file and restart your nodes to apply changes.
-
-### 📦 Model catalog (`model.yml`)
-
-Define which models Octybot uses (LLM, STT, TTS, wake-word) along with their URLs and sample rates.
-
-> ⚠️ **Important:** The **`name`** of every model in `model.yml` must match **exactly** the name you use in `config.py` **and** the name documented in this README (same text and file extension).
-
-### 🔗 Required matching with `config.py`
-Use the **same strings** from `model.yml` in your Python config:
-
-> [!TIP]
-> If you build with `colcon build --symlink-install`, Python edits are picked up without rebuilding. Otherwise, rebuild and `source install/setup.bash`.
-
-### Importing settings in your code
-```python
-# if you re-export in config/__init__.py
-from .config import AUDIO_LISTENER_SAMPLE_RATE, DEFAULT_MODEL_FILENAME
-
-# otherwise
-from .llm_utils.config  import AUDIO_LISTENER_SAMPLE_RATE, DEFAULT_MODEL_FILENAME
-
-```
 <h2 id="Project Structure">📂 Project Structure</h2>
 
 ```text
