@@ -133,8 +133,8 @@ def ensure_model(model_name: str) -> str:
         raise FileNotFoundError(
             f"[LLM_LOADER] Ruta directa no existe: {p}\n"
             f"Ejecuta el prerrequisito y vuelve a lanzar ROS:\n"
-            f'  pkg_prefix="$(ros2 pkg prefix LLM)" && '
-            f'  bash "$pkg_prefix/share/LLM/scripts/download_models.sh"'
+            f'  pkg_prefix="$(ros2 pkg prefix llm)" && '
+            f'  bash "$pkg_prefix/share/llm/scripts/download_models.sh"'
         )
 
     cache = Path(os.environ.get("OCTOPY_CACHE",
@@ -165,8 +165,8 @@ def ensure_model(model_name: str) -> str:
         f"[LLM_LOADER] No se encontró el modelo en: {cache / clean}\n"
         f"Busca por nombre: {stem}\n"
         f"Ejecuta el prerrequisito y vuelve a lanzar ROS:\n"
-        f'  pkg_prefix="$(ros2 pkg prefix LLM)" && '
-        f'  bash "$pkg_prefix/share/LLM/scripts/download_models.sh"'
+        f'  pkg_prefix="$(ros2 pkg prefix llm)" && '
+        f'  bash "$pkg_prefix/share/llm/scripts/download_models.sh"'
     )
 
     

@@ -27,8 +27,8 @@ DEFAULT_MODEL_URL = "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolv
 """Information - data"""
 FUZZY_LOGIC_ACCURACY_KB = 0.75 
 FUZZY_LOGIC_ACCURACY_POSE = 0.70
-PATH_KB = "src/LLM/data/kb.json"
-PATH_POSES = "src/LLM/data/poses.json"
+PATH_KB = "src/llm/data/kb.json"
+PATH_POSES = "src/llm/data/poses.json"
 
 """Audio Publisher Node"""
 AUDIO_PUBLISHER_DEVICE_ID = -1 #This is the default output

@@ -80,7 +80,7 @@ source install/setup.bash
 Run the downloader to fetch any missing models:
 ```bash
 # Install all the models for the LLM Integration
-bash "$(ros2 pkg prefix LLM)/share/LLM/scripts/download_models.sh"
+bash "$(ros2 pkg prefix llm)/share/llm/scripts/download_models.sh"
 ```
 The script installs everything into your cache (`~/.cache/octopy`, or `$OCTOPY_CACHE` if set).
 You’re done when you see:

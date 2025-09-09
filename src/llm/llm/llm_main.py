@@ -38,7 +38,7 @@ class OctopyAgent(Node):
         # Data
         self.kb = KB( os.path.expanduser(os.getenv("OCTOPY_KB", PATH_KB)))
         self.poses = PosesIndex(os.path.expanduser(os.getenv("OCTOPY_POSES", PATH_POSES)))
-        self.model_stt = ensure_stt_model(DEFAULT_MODEL_FILENAME, DEFAULT_MODEL_URL)
+        self.model_stt = ensure_stt_model(DEFAULT_MODEL_FILENAME)
         self.llm = LLM(model_path=self.model_stt)
         self.router = Router(self.kb, self.poses, self.llm, self.tool_get_battery, self.tool_get_current_pose, self.tool_nav_to_place, self.publish_natural_move)
         self.get_logger().info('Octopy listo ✅  Publica en /transcript')

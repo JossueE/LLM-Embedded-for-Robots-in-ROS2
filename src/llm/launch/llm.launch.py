@@ -3,7 +3,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    common = dict(package="LLM", output="screen")
+    common = dict(package="llm", output="screen")
 
     return LaunchDescription([
         Node(**common, executable="audio_listener", name="audio_listener"),
