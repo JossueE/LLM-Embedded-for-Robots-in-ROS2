@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'LLM'
+package_name = 'llm'
 
 setup(
     name=package_name,
@@ -10,7 +10,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/LLM.launch.py']),
+        ('share/' + package_name + '/launch', ['launch/llm.launch.py']),
         ('share/' + package_name + '/config', ['config/models.yml']),
         ('share/' + package_name + '/scripts', ['scripts/download_models.sh']), 
     ],
@@ -23,12 +23,12 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'llm_main = LLM.llm_main:main',
-            'audio_listener = LLM.audio_listener:main',
-            'audio_publisher = LLM.audio_publisher:main',
-            'wake_word = LLM.wake_word_detector:main',
-            'stt = LLM.speech_to_text:main',
-            'tts = LLM.text_to_speech:main'
+            'llm_main = llm.llm_main:main',
+            'audio_listener = llm.audio_listener:main',
+            'audio_publisher = llm.audio_publisher:main',
+            'wake_word = llm.wake_word_detector:main',
+            'stt = llm.speech_to_text:main',
+            'tts = llm.text_to_speech:main'
         ],
     },
 )

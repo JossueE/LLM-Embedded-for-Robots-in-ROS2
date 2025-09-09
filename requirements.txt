@@ -1,26 +1,26 @@
 # Runtime dependencies for LLM Embedded for Robots in ROS2
 
 # LLM inference
-llama-cpp-python
-rapidfuzz
+llama-cpp-python==0.3.15
+rapidfuzz==3.13.0
 
 # Audio capture / processing
-numpy
-pyaudio
-webrtcvad
-vosk
+numpy==2.2.6
+pyaudio==0.2.14
+webrtcvad==2.0.10
+vosk==0.3.45
 
 # Speech-to-text
-torch
-pyyaml
-typeguard
-onnx
-onnxruntime
-torchaudio
-omegaconf
+torch==2.8.0
+pyyaml==6.0.2
+typeguard==4.4.4
+onnx==1.18.0
+onnxruntime==1.22.1
+torchaudio==2.8.0
+omegaconf==2.3.0
 
 # Testing tools
-pytest
-ament-copyright
-ament-flake8
-ament-pep257
+pytest==8.4.1
+ament-copyright==0.12.14
+ament-flake8==0.12.14
+ament-pep257==0.12.14

@@ -90,19 +90,20 @@ You’re done when you see:
 ---
 
 <h2 id="configuration">⚙️ Configuration</h2>
-> [!WARNING]
+
+> [!WARNING] 
 > LLMs and audio models can be large. Ensure you have enough **disk space** and **RAM/VRAM** for your chosen settings.
 
 All runtime settings live in **`config/config.py`**. They are plain Python constants—edit the file and restart your nodes to apply changes.
 
-### 📦 Model catalog (`model.yml`)
+### 📦 Model catalog (`models.yml`)
 
 Define which models Octybot uses (LLM, STT, TTS, wake-word) along with their URLs and sample rates.
 
-> ⚠️ **Important:** The **`name`** of every model in `model.yml` must match **exactly** the name you use in `config.py` **and** the name documented in this README (same text and file extension).
+> ⚠️ **Important:** The **`name`** of every model in `models.yml` must match **exactly** the name you use in `config.py` **and** the name documented in this README (same text and file extension).
 
 ### 🔗 Required matching with `config.py`
-Use the **same strings** from `model.yml` in your Python config:
+Use the **same strings** from `models.yml` in your Python config:
 
 > [!TIP]
 > If you build with `colcon build --symlink-install`, Python edits are picked up without rebuilding. Otherwise, rebuild and `source install/setup.bash`.
@@ -124,7 +125,7 @@ from .llm_utils.config  import AUDIO_LISTENER_SAMPLE_RATE, DEFAULT_MODEL_FILENAM
 Start everything with:
 
 ```bash
-ros2 launch LLM LLM.launch.py
+ros2 launch llm llm.launch.py
 ```
 This launch uses your default microphone. You’ll know the nodes are ready when you see logs like:
 
@@ -189,11 +190,11 @@ LLM-Embedded-for-Robots-in-ROS2/
 |   ├──scripts
 |   |  └──download_models.sh
 |   ├──launch
-|   |  └──LLM.launch.py
+|   |  └──llm.launch.py
 |   ├──data
 |   |  ├──kb.json
 |   |  └──poses.json
-│   └── LLM/                 # ROS2 package: agent, STT, wake word, TTS
+│   └── llm/                 # ROS2 package: agent, STT, wake word, TTS
 │       ├──llm_utils
 │       │  ├──data.py 
 │       │  ├──llm_client.py 
